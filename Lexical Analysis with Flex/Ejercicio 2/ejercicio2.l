@@ -3,10 +3,14 @@
 
 %%
 
-[ \t]*\n		contador++;
-[^ \t]+\n		;
-
-
+[^\n]*\n	{
+		for(int i=0;yytext[i]!='\n';i++){
+			if(yytext[i]!=' ' && yytext[i]!='\t'){
+				return 1;
+			}
+		}
+		contador++;
+		}
 .|\n			;
 
 %%
