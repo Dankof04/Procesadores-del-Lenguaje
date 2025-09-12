@@ -3,7 +3,8 @@
 
 %%
 
-[ \t\n]*\n		contador++;
+[ \t]*\n		contador++;
+[^ \t]+\n		;
 
 
 .|\n			;
