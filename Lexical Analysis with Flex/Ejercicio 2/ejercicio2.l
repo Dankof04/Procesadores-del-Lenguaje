@@ -3,9 +3,10 @@
 
 %%
 
-[^\n]+		;
-\n		contador++;
+[ \t\n]*\n		contador++;
 
+
+.|\n			;
 
 %%
 
