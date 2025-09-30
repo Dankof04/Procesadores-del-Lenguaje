@@ -13,28 +13,28 @@ int contador_variables=0;
 
 %%
 
-^--.*\n                  {/* Ignorar comentario de una línea */}
-^"/*"                  { yy_push_state(COM); }
+<*>--.*\n                                             {/* Ignorar comentario de una línea */}
+<*>[ \t]*"/*"                                                { yy_push_state(COM); }
 
 
-<COM>[^*/]*[\n]?    {}
-<COM>"*/"           { yy_pop_state(); }
+<COM>[^*/]*[\n]*                                    {}
+<COM>[ \t]*"*/"                                          { yy_pop_state(); }
 
 CREATE[ \t]+
 OR[ \t]+
 REPLACE[ \t]+
-PROCEDURE[ \t]+[A-Za-z0-9]+\(   { yy_push_state(PROCEDIMIENTO); }
+PROCEDURE[ \t]+[A-Za-z0-9\_]+[\n]*\([\n]*                { yy_push_state(PROCEDIMIENTO); }
 
-<PROCEDIMIENTO>[A-Za-z0-9 ]+,    { contador_argumentos++; }
-<PROCEDIMIENTO>[A-Za-z0-9 ]+/\)    { contador_argumentos++; }
-<PROCEDIMIENTO>\)                       { yy_pop_state(); }
-
-[ \t\n]+            { /* Ignorar espacios en blanco */ }
-
+<PROCEDIMIENTO>[ \t]*[A-Za-z0-9\_ ]+,[\n]*          { contador_argumentos++; }
+<PROCEDIMIENTO>[ \t]*[A-Za-z0-9\_ ]+[\n]*           { contador_argumentos++; }
+<PROCEDIMIENTO>[ \t]*[A-Za-z0-9\_ ]+/\)[\n]*        { contador_argumentos++; }
+<PROCEDIMIENTO>\)                                   { yy_pop_state(); }
 
 
 
-.|\n                { /* Ignorar cualquier otro carácter */ } 
+
+[ \t]*                                               {}
+.|\n                                                { /* Ignorar cualquier otro carácter */ } 
 %%
 
 int main(int argc, char **argv){

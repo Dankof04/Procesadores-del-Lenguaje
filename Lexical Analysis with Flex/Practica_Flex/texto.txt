@@ -1,1 +1,8 @@
-CREATE OR REPLACE PROCEDURE procedimiento(arg1 arg1,arg2 arg2)
+CREATE PROCEDURE get_user_details
+(
+    /* Los comentarios multilínea son como en C.
+    */
+    p_user_id IN NUMBER,
+    p_user_name OUT VARCHAR2,
+    p_user_email OUT VARCHAR2
+)
