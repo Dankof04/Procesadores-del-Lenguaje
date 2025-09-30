@@ -1,0 +1,1 @@
+CREATE OR REPLACE PROCEDURE procedimiento(arg1 arg1,arg2 arg2)
