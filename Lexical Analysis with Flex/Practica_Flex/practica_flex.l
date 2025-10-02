@@ -4,6 +4,8 @@ int contador_argumentos=0;
 int contador_variables=0;
 int contador_tablas=0;
 int max_tablas=0;
+char *tablas_text;
+char *max_tablas_text=NULL;
 %}
 
 %s COM
@@ -43,9 +45,15 @@ PROCEDURE{espacio_tabulacion}{texto_generico}[\n]*\([\n]*       { BEGIN(ARGS); }
 
 <BODY>SELECT[A-Z0-9\_ ,]+FROM                                   { yy_push_state(SELECT); }
 
-<SELECT>{espacio_tabulacion}{texto_generico},                   { contador_tablas++; }
-<SELECT>{espacio_tabulacion}{texto_generico}/'WHERE'|;            { contador_tablas++; }
-<SELECT>WHERE|;                                                 { if(contador_tablas>max_tablas){max_tablas=contador_tablas;}; contador_tablas=0; yy_pop_state();  }
+<SELECT>{espacio_tabulacion}{texto_generico},                   {   contador_tablas++; 
+                                                                    if (tablas_text==NULL){
+                                                                        tablas_text=strdup(yytext);
+                                                                    } else{ 
+                                                                        strcat(tablas_text,yytext);
+                                                                    }
+                                                                }
+<SELECT>{espacio_tabulacion}{texto_generico}/'WHERE'|;          { contador_tablas++; strcat(tablas_text,yytext); }
+<SELECT>WHERE|;                                                 { if(contador_tablas>max_tablas){max_tablas=contador_tablas; max_tablas_text=strdup(tablas_text); }; contador_tablas=0; tablas_text=NULL; yy_pop_state();  }
 
 
 
@@ -65,11 +73,15 @@ int main(int argc, char **argv){
     } 
     else {
         yyin = stdin; // Esto no es necesario, pues es el comportamiento de flex por defecto
-    }    
+    }
+
     yylex();
 
     printf("Número de argumentos: %d\n", contador_argumentos);
     printf("Número de variables locales: %d\n", contador_variables);
-    printf("La consulta SELECT con más tablas tiene: %d\n", max_tablas);
+    printf("La consulta SELECT con más tablas tiene %d\n y son: %s", max_tablas,max_tablas_text);
+
+    free(tablas_text);
+    free(max_tablas_text);
     return 0;
 }
