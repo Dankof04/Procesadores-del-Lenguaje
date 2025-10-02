@@ -18,8 +18,7 @@ IS
     v3 VARCHAR2;
 BEGIN
   SELECT user_name, user_email INTO p_user_name, p_user_email FROM ave, avestruz,a,a;
-
-
   SELECT user_name, user_email INTO p_user_name, p_user_email FROM ave, avestruz,a,a,a,a;
-  SELECT user_name, user_email INTO p_user_name, p_user_email FROM ave, avestruz,a;
   SELECT user_name, user_email INTO p_user_name, p_user_email FROM ave, avestruz,a,a,a,a,a,a,a,a,a,a;
+  SELECT user_name, user_email INTO p_user_name, p_user_email FROM ave, avestruz,a;
+  

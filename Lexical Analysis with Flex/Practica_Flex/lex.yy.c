@@ -749,8 +749,8 @@ int yy_flex_debug = 1;
 
 static const flex_int16_t yy_rule_linenum[21] =
     {   0,
-       21,   22,   25,   26,   29,   30,   31,   32,   35,   36,
-       37,   38,   41,   42,   44,   46,   47,   48,   52,   53
+       23,   24,   27,   28,   31,   32,   33,   34,   37,   38,
+       39,   40,   43,   44,   46,   48,   56,   57,   61,   62
     } ;
 
 static yy_state_type *yy_state_buf=0, *yy_state_ptr=0;
@@ -783,9 +783,11 @@ int contador_argumentos=0;
 int contador_variables=0;
 int contador_tablas=0;
 int max_tablas=0;
-#line 787 "lex.yy.c"
-
+char *tablas_text=NULL;
+char *max_tablas_text=NULL;
 #line 789 "lex.yy.c"
+
+#line 791 "lex.yy.c"
 
 #define INITIAL 0
 #define COM 1
@@ -1086,10 +1088,10 @@ YY_DECL
 
 	{
 /* %% [7.0] user's declarations go here */
-#line 19 "practica_flex.l"
+#line 21 "practica_flex.l"
 
 
-#line 1093 "lex.yy.c"
+#line 1095 "lex.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -1195,118 +1197,125 @@ do_action:	/* This label is used only to access EOF actions. */
 case 1:
 /* rule 1 can match eol */
 YY_RULE_SETUP
-#line 21 "practica_flex.l"
+#line 23 "practica_flex.l"
 {/* Ignorar comentario de una línea */}
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 22 "practica_flex.l"
+#line 24 "practica_flex.l"
 { yy_push_state(COM); }
 	YY_BREAK
 case 3:
 /* rule 3 can match eol */
 YY_RULE_SETUP
-#line 25 "practica_flex.l"
+#line 27 "practica_flex.l"
 {}
 	YY_BREAK
 case 4:
 /* rule 4 can match eol */
 YY_RULE_SETUP
-#line 26 "practica_flex.l"
+#line 28 "practica_flex.l"
 { yy_pop_state(); }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 29 "practica_flex.l"
+#line 31 "practica_flex.l"
 
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 30 "practica_flex.l"
+#line 32 "practica_flex.l"
 
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 31 "practica_flex.l"
+#line 33 "practica_flex.l"
 
 	YY_BREAK
 case 8:
 /* rule 8 can match eol */
 YY_RULE_SETUP
-#line 32 "practica_flex.l"
+#line 34 "practica_flex.l"
 { BEGIN(ARGS); }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 35 "practica_flex.l"
+#line 37 "practica_flex.l"
 { BEGIN(VARS); }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 36 "practica_flex.l"
+#line 38 "practica_flex.l"
 { BEGIN(VARS); }
 	YY_BREAK
 case 11:
 /* rule 11 can match eol */
 YY_RULE_SETUP
-#line 37 "practica_flex.l"
+#line 39 "practica_flex.l"
 { contador_argumentos++; }
 	YY_BREAK
 case 12:
 /* rule 12 can match eol */
 YY_RULE_SETUP
-#line 38 "practica_flex.l"
+#line 40 "practica_flex.l"
 { contador_argumentos++; }
 	YY_BREAK
 case 13:
 /* rule 13 can match eol */
 YY_RULE_SETUP
-#line 41 "practica_flex.l"
+#line 43 "practica_flex.l"
 { contador_variables++; }
 	YY_BREAK
 case 14:
 /* rule 14 can match eol */
 YY_RULE_SETUP
-#line 42 "practica_flex.l"
+#line 44 "practica_flex.l"
 { BEGIN(BODY); }
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 44 "practica_flex.l"
-{ yy_push_state(SELECT); }
+#line 46 "practica_flex.l"
+{ yy_push_state(SELECT); tablas_text=malloc(1000);}
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 46 "practica_flex.l"
-{ contador_tablas++; }
+#line 48 "practica_flex.l"
+{   
+                                                                    contador_tablas++; 
+                                                                    if (tablas_text==NULL){
+                                                                        tablas_text=strdup(yytext);
+                                                                    } else{ 
+                                                                        strcat(tablas_text,yytext);
+                                                                    }
+                                                                }
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 47 "practica_flex.l"
-{ contador_tablas++; }
+#line 56 "practica_flex.l"
+{ contador_tablas++; strcat(tablas_text,yytext); }
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 48 "practica_flex.l"
-{ if(contador_tablas>max_tablas){max_tablas=contador_tablas;}; contador_tablas=0; yy_pop_state();  }
+#line 57 "practica_flex.l"
+{ if(contador_tablas>max_tablas){max_tablas=contador_tablas; max_tablas_text=strdup(tablas_text); }; contador_tablas=0; tablas_text=NULL; yy_pop_state();  }
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 52 "practica_flex.l"
+#line 61 "practica_flex.l"
 {}
 	YY_BREAK
 case 20:
 /* rule 20 can match eol */
 YY_RULE_SETUP
-#line 53 "practica_flex.l"
+#line 62 "practica_flex.l"
 {} 
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 54 "practica_flex.l"
+#line 63 "practica_flex.l"
 ECHO;
 	YY_BREAK
-#line 1310 "lex.yy.c"
+#line 1319 "lex.yy.c"
 			case YY_STATE_EOF(INITIAL):
 			case YY_STATE_EOF(COM):
 			case YY_STATE_EOF(ARGS):
@@ -2491,7 +2500,7 @@ void yyfree (void * ptr )
 
 /* %ok-for-header */
 
-#line 54 "practica_flex.l"
+#line 63 "practica_flex.l"
 
 
 int main(int argc, char **argv){
@@ -2506,11 +2515,15 @@ int main(int argc, char **argv){
     } 
     else {
         yyin = stdin; // Esto no es necesario, pues es el comportamiento de flex por defecto
-    }    
+    }
+
     yylex();
 
     printf("Número de argumentos: %d\n", contador_argumentos);
     printf("Número de variables locales: %d\n", contador_variables);
-    printf("La consulta SELECT con más tablas tiene: %d\n", max_tablas);
+    printf("La consulta SELECT con más tablas tiene %d\n y son: %s", max_tablas,max_tablas_text);
+
+    free(tablas_text);
+    free(max_tablas_text);
     return 0;
 }

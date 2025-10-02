@@ -4,7 +4,7 @@ int contador_argumentos=0;
 int contador_variables=0;
 int contador_tablas=0;
 int max_tablas=0;
-char *tablas_text;
+char *tablas_text=NULL;
 char *max_tablas_text=NULL;
 %}
 
@@ -43,9 +43,10 @@ PROCEDURE{espacio_tabulacion}{texto_generico}[\n]*\([\n]*       { BEGIN(ARGS); }
 <VARS>{espacio_tabulacion}{texto_generico};[\n]*                { contador_variables++; }
 <VARS>BEGIN[\n]*                                                { BEGIN(BODY); }
 
-<BODY>SELECT[A-Z0-9\_ ,]+FROM                                   { yy_push_state(SELECT); }
+<BODY>SELECT[A-Z0-9\_ ,]+FROM                                   { yy_push_state(SELECT); tablas_text=malloc(1000);}
 
-<SELECT>{espacio_tabulacion}{texto_generico},                   {   contador_tablas++; 
+<SELECT>{espacio_tabulacion}{texto_generico},                   {   
+                                                                    contador_tablas++; 
                                                                     if (tablas_text==NULL){
                                                                         tablas_text=strdup(yytext);
                                                                     } else{ 
