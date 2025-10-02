@@ -1,8 +1,25 @@
+ñwosfsñofnñs
+
 CREATE PROCEDURE get_user_details
 (
     /* Los comentarios multilínea son como en C.
     */
     p_user_id IN NUMBER,
     p_user_name OUT VARCHAR2,
-    p_user_email OUT VARCHAR2
+    p_user_email OUT VARCHAR2,
+    p_user_email OUT VARCHAR2,
+    p_user_email OUT VARCHAR2,
+    p_user_email OUT VARCHAR2,
+	p_user_email OUT VARCHAR2
 )
+IS 
+    v1 VARCHAR2;
+    v2 VARCHAR2;
+    v3 VARCHAR2;
+BEGIN
+  SELECT user_name, user_email INTO p_user_name, p_user_email FROM ave, avestruz,a,a;
+
+
+  SELECT user_name, user_email INTO p_user_name, p_user_email FROM ave, avestruz,a,a,a,a;
+  SELECT user_name, user_email INTO p_user_name, p_user_email FROM ave, avestruz,a;
+  SELECT user_name, user_email INTO p_user_name, p_user_email FROM ave, avestruz,a,a,a,a,a,a,a,a,a,a;

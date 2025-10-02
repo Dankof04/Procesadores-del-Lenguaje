@@ -2,39 +2,55 @@
 //Declaración de variables
 int contador_argumentos=0;
 int contador_variables=0;
+int contador_tablas=0;
+int max_tablas=0;
 %}
 
 %s COM
-%x PROCEDIMIENTO 
-%x PARAMETROS
+%x ARGS VARS BODY SELECT
 
-%option stack
+%option stack caseless
+
+
+texto_generico [A-Z0-9\_ ]+
+espacio_tabulacion [ \t]*
 
 
 %%
 
-<*>--.*\n                                             {/* Ignorar comentario de una línea */}
-<*>[ \t]*"/*"                                                { yy_push_state(COM); }
+<*>--.*\n                                                       {/* Ignorar comentario de una línea */}
+<*>[ \t]*"/*"                                                   { yy_push_state(COM); }
 
 
-<COM>[^*/]*[\n]*                                    {}
-<COM>[ \t]*"*/"                                          { yy_pop_state(); }
+<COM>[^*/]*"\n"*                                                {}
+<COM>[ \t]*"*/""\n"*                                            { yy_pop_state(); }
+
 
 CREATE[ \t]+
 OR[ \t]+
 REPLACE[ \t]+
-PROCEDURE[ \t]+[A-Za-z0-9\_]+[\n]*\([\n]*                { yy_push_state(PROCEDIMIENTO); }
-
-<PROCEDIMIENTO>[ \t]*[A-Za-z0-9\_ ]+,[\n]*          { contador_argumentos++; }
-<PROCEDIMIENTO>[ \t]*[A-Za-z0-9\_ ]+[\n]*           { contador_argumentos++; }
-<PROCEDIMIENTO>[ \t]*[A-Za-z0-9\_ ]+/\)[\n]*        { contador_argumentos++; }
-<PROCEDIMIENTO>\)                                   { yy_pop_state(); }
+PROCEDURE{espacio_tabulacion}{texto_generico}[\n]*\([\n]*       { BEGIN(ARGS); }
 
 
+<ARGS>IS{espacio_tabulacion}                                    { BEGIN(VARS); }
+<ARGS>AS{espacio_tabulacion}                                    { BEGIN(VARS); }
+<ARGS>{espacio_tabulacion}{texto_generico},[\n]*                { contador_argumentos++; }
+<ARGS>{espacio_tabulacion}{texto_generico}[\n]*\)[\n]*          { contador_argumentos++; }
 
 
-[ \t]*                                               {}
-.|\n                                                { /* Ignorar cualquier otro carácter */ } 
+<VARS>{espacio_tabulacion}{texto_generico};[\n]*                { contador_variables++; }
+<VARS>BEGIN[\n]*                                                { BEGIN(BODY); }
+
+<BODY>SELECT[A-Z0-9\_ ,]+FROM                                   { yy_push_state(SELECT); }
+
+<SELECT>{espacio_tabulacion}{texto_generico},                   { contador_tablas++; }
+<SELECT>{espacio_tabulacion}{texto_generico}/'WHERE'|;            { contador_tablas++; }
+<SELECT>WHERE|;                                                 { if(contador_tablas>max_tablas){max_tablas=contador_tablas;}; contador_tablas=0; yy_pop_state();  }
+
+
+
+[ \t]*                                                          {}
+.|\n                                                            {} 
 %%
 
 int main(int argc, char **argv){
@@ -53,5 +69,7 @@ int main(int argc, char **argv){
     yylex();
 
     printf("Número de argumentos: %d\n", contador_argumentos);
+    printf("Número de variables locales: %d\n", contador_variables);
+    printf("La consulta SELECT con más tablas tiene: %d\n", max_tablas);
     return 0;
 }
