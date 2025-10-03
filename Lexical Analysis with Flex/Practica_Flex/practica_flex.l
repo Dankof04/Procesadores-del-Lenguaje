@@ -9,7 +9,7 @@ char *max_tablas_text=NULL;
 %}
 
 %s COM
-%x ARGS VARS BODY SELECT
+%x ARGS VARS BODY SELECT UPD_DEL
 
 %option stack caseless
 
@@ -34,28 +34,26 @@ REPLACE[ \t]+
 PROCEDURE{espacio_tabulacion}{texto_generico}[\n]*\([\n]*       { BEGIN(ARGS); }
 
 
-<ARGS>IS{espacio_tabulacion}                                    { BEGIN(VARS); }
-<ARGS>AS{espacio_tabulacion}                                    { BEGIN(VARS); }
+
 <ARGS>{espacio_tabulacion}{texto_generico},[\n]*                { contador_argumentos++; }
 <ARGS>{espacio_tabulacion}{texto_generico}[\n]*\)[\n]*          { contador_argumentos++; }
+<ARGS>IS{espacio_tabulacion}                                    { BEGIN(VARS); }
+<ARGS>AS{espacio_tabulacion}                                    { BEGIN(VARS); }
 
 
 <VARS>{espacio_tabulacion}{texto_generico};[\n]*                { contador_variables++; }
 <VARS>BEGIN[\n]*                                                { BEGIN(BODY); }
 
-<BODY>SELECT[A-Z0-9\_ ,]+FROM                                   { yy_push_state(SELECT); tablas_text=malloc(1000);}
+<BODY>SELECT[A-Z0-9\_ ,]+FROM                                   { yy_push_state(SELECT);}
 
-<SELECT>{espacio_tabulacion}{texto_generico},                   {   
+<SELECT>{espacio_tabulacion}{texto_generico},                   {   yymore();
                                                                     contador_tablas++; 
-                                                                    if (tablas_text==NULL){
-                                                                        tablas_text=strdup(yytext);
-                                                                    } else{ 
-                                                                        strcat(tablas_text,yytext);
-                                                                    }
                                                                 }
-<SELECT>{espacio_tabulacion}{texto_generico}/'WHERE'|;          { contador_tablas++; strcat(tablas_text,yytext); }
-<SELECT>WHERE|;                                                 { if(contador_tablas>max_tablas){max_tablas=contador_tablas; max_tablas_text=strdup(tablas_text); }; contador_tablas=0; tablas_text=NULL; yy_pop_state();  }
+<SELECT>{espacio_tabulacion}{texto_generico}/(;|'WHERE')        { contador_tablas++; yymore(); tablas_text=strdup(yytext); }
+<SELECT>'WHERE'|;                                               { if(contador_tablas>max_tablas){max_tablas=contador_tablas; max_tablas_text=strdup(tablas_text); }; contador_tablas=0; yy_pop_state(); }
 
+
+<UPD_DEL>
 
 
 [ \t]*                                                          {}
@@ -80,7 +78,7 @@ int main(int argc, char **argv){
 
     printf("Número de argumentos: %d\n", contador_argumentos);
     printf("Número de variables locales: %d\n", contador_variables);
-    printf("La consulta SELECT con más tablas tiene %d\n y son: %s", max_tablas,max_tablas_text);
+    printf("La consulta SELECT con más tablas tiene %d\n y son: %s\n", max_tablas,max_tablas_text);
 
     free(tablas_text);
     free(max_tablas_text);
