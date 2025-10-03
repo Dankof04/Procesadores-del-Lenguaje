@@ -1,24 +1,15 @@
-ñwosfsñofnñs
-
-CREATE PROCEDURE get_user_details
-(
-    /* Los comentarios multilínea son como en C.
-    */
-    p_user_id IN NUMBER,
-    p_user_name OUT VARCHAR2,
-    p_user_email OUT VARCHAR2,
-    p_user_email OUT VARCHAR2,
-    p_user_email OUT VARCHAR2,
-    p_user_email OUT VARCHAR2,
-	p_user_email OUT VARCHAR2
-)
-IS 
-    v1 VARCHAR2;
-    v2 VARCHAR2;
-    v3 VARCHAR2;
+CREATE OR REPLACE
+  -- Entre paréntesis están los argumentos
+PROCEDURE Actualiza_Saldo(cuenta NUMBER, new_saldo NUMBER)
+IS
+  -- Aquí se encontraría la declaración de las variables locales
 BEGIN
-  SELECT user_name, user_email INTO p_user_name, p_user_email FROM ave, avestruz,a,a;
-  SELECT user_name, user_email INTO p_user_name, p_user_email FROM ave, avestruz,a,a,a,a;
-  SELECT user_name, user_email INTO p_user_name, p_user_email FROM ave, avestruz,a,a,a,a,a,a,a,a,a,a;
-  SELECT user_name, user_email INTO p_user_name, p_user_email FROM ave, avestruz,a;
-  
+  -- Sentencia de actualización
+  UPDATE SALDOS_CUENTAS
+    SET SALDO = new_saldo,
+    FX_ACTUALIZACION = SYSDATE
+    WHERE CO_CUENTA = cuenta;
+  -- Sentencia de consulta sobre tabla cliente
+  SELECT *
+  FROM CLIENTE;
+END Actualiza_Saldo;

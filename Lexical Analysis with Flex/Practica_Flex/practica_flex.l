@@ -4,12 +4,15 @@ int contador_argumentos=0;
 int contador_variables=0;
 int contador_tablas=0;
 int max_tablas=0;
+int long_up_del=0;
+int max_long_up_del=0;
 char *tablas_text=NULL;
 char *max_tablas_text=NULL;
+char *max_long_text=NULL;
 %}
 
 %s COM
-%x ARGS VARS BODY SELECT UPD_DEL
+%x ARGS VARS BODY SELECT UPDATE DELETE
 
 %option stack caseless
 
@@ -44,16 +47,33 @@ PROCEDURE{espacio_tabulacion}{texto_generico}[\n]*\([\n]*       { BEGIN(ARGS); }
 <VARS>{espacio_tabulacion}{texto_generico};[\n]*                { contador_variables++; }
 <VARS>BEGIN[\n]*                                                { BEGIN(BODY); }
 
-<BODY>SELECT[A-Z0-9\_ ,]+FROM                                   { yy_push_state(SELECT);}
+<BODY>SELECT[A-Z0-9\_ ,\*\n]+FROM                                   { yy_push_state(SELECT);}
+<BODY>[ \t]/UPDATE                                          { yy_push_state(UPDATE); }
+<BODY>[ \t]/DELETE                                                 { yy_push_state(DELETE); }
+
+<UPDATE>UPDATE[^;]+;                                           {   long_up_del=yyleng; 
+                                                                    if(long_up_del>max_long_up_del){ 
+                                                                        max_long_text=strdup(yytext); 
+                                                                        max_long_up_del=long_up_del; 
+                                                                    }
+                                                                    long_up_del=0;
+                                                                    yy_pop_state();
+                                                                } 
+
+<DELETE>DELETE[^;]+;                                           {   long_up_del=yyleng; 
+                                                                    if(long_up_del>max_long_up_del){ 
+                                                                        max_long_text=strdup(yytext); 
+                                                                        max_long_up_del=long_up_del; 
+                                                                    }
+                                                                    long_up_del=0;
+                                                                    yy_pop_state();
+                                                                }                                      
 
 <SELECT>{espacio_tabulacion}{texto_generico},                   {   yymore();
                                                                     contador_tablas++; 
                                                                 }
 <SELECT>{espacio_tabulacion}{texto_generico}/(;|'WHERE')        { contador_tablas++; yymore(); tablas_text=strdup(yytext); }
 <SELECT>'WHERE'|;                                               { if(contador_tablas>max_tablas){max_tablas=contador_tablas; max_tablas_text=strdup(tablas_text); }; contador_tablas=0; yy_pop_state(); }
-
-
-<UPD_DEL>
 
 
 [ \t]*                                                          {}
@@ -79,6 +99,7 @@ int main(int argc, char **argv){
     printf("Número de argumentos: %d\n", contador_argumentos);
     printf("Número de variables locales: %d\n", contador_variables);
     printf("La consulta SELECT con más tablas tiene %d\n y son: %s\n", max_tablas,max_tablas_text);
+    printf("La operación UPDATE o DELETE con mayor número de caracteres es: %s\n", max_long_text);
 
     free(tablas_text);
     free(max_tablas_text);
