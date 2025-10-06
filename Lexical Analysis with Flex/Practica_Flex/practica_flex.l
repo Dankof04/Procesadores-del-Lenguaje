@@ -17,7 +17,7 @@ char *max_long_text=NULL;
 %option stack caseless
 
 
-texto_generico [A-Z0-9\_ ]+
+texto_generico [A-Z0-9\_]+
 espacio_tabulacion [ \t]*
 
 
@@ -47,9 +47,10 @@ PROCEDURE{espacio_tabulacion}{texto_generico}[\n]*\([\n]*       { BEGIN(ARGS); }
 <VARS>{espacio_tabulacion}{texto_generico};[\n]*                { contador_variables++; }
 <VARS>BEGIN[\n]*                                                { BEGIN(BODY); }
 
-<BODY>SELECT[A-Z0-9\_ ,\*\n]+FROM                                   { yy_push_state(SELECT);}
+<BODY>SELECT([^;])*FROM                                   { yy_push_state(SELECT);}
 <BODY>[ \t]/UPDATE                                          { yy_push_state(UPDATE); }
 <BODY>[ \t]/DELETE                                                 { yy_push_state(DELETE); }
+<BODY>END[^;]+;                                                 { BEGIN(INITIAL); }
 
 <UPDATE>UPDATE[^;]+;                                           {   long_up_del=yyleng; 
                                                                     if(long_up_del>max_long_up_del){ 
@@ -69,14 +70,13 @@ PROCEDURE{espacio_tabulacion}{texto_generico}[\n]*\([\n]*       { BEGIN(ARGS); }
                                                                     yy_pop_state();
                                                                 }                                      
 
-<SELECT>{espacio_tabulacion}{texto_generico},                   {   yymore();
-                                                                    contador_tablas++; 
-                                                                }
-<SELECT>{espacio_tabulacion}{texto_generico}/(;|'WHERE')        { contador_tablas++; yymore(); tablas_text=strdup(yytext); }
-<SELECT>'WHERE'|;                                               { if(contador_tablas>max_tablas){max_tablas=contador_tablas; max_tablas_text=strdup(tablas_text); }; contador_tablas=0; yy_pop_state(); }
+<SELECT>{espacio_tabulacion}{texto_generico},                   { contador_tablas++; yymore(); }
+<SELECT>{espacio_tabulacion}{texto_generico}{espacio_tabulacion}/;                  { contador_tablas++; yymore(); tablas_text=strdup(yytext); }
+<SELECT>{espacio_tabulacion}{texto_generico}" "/WHERE                                  { contador_tablas++; yymore(); tablas_text=strdup(yytext); }
+<SELECT>WHERE                                               { if(contador_tablas>max_tablas){max_tablas=contador_tablas; max_tablas_text=strdup(tablas_text); }; contador_tablas=0; yy_pop_state(); }
+<SELECT>;                                               { if(contador_tablas>max_tablas){max_tablas=contador_tablas; max_tablas_text=strdup(tablas_text); }; contador_tablas=0; yy_pop_state(); }
 
 
-[ \t]*                                                          {}
 .|\n                                                            {} 
 %%
 

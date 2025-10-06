@@ -1,15 +1,33 @@
-CREATE OR REPLACE
-  -- Entre paréntesis están los argumentos
-PROCEDURE Actualiza_Saldo(cuenta NUMBER, new_saldo NUMBER)
-IS
-  -- Aquí se encontraría la declaración de las variables locales
+CREATE PROCEDURE get_user_details
+(
+    /* Los comentarios multilínea son como en C.
+    */
+    p_user_id IN NUMBER,
+    p_user_name OUT VARCHAR2,
+    p_user_email OUT VARCHAR2
+)
+IS 
+    v1 VARCHAR2;
+    v2 VARCHAR2;
+    v3 VARCHAR2;
 BEGIN
-  -- Sentencia de actualización
-  UPDATE SALDOS_CUENTAS
-    SET SALDO = new_saldo,
-    FX_ACTUALIZACION = SYSDATE
-    WHERE CO_CUENTA = cuenta;
-  -- Sentencia de consulta sobre tabla cliente
-  SELECT *
-  FROM CLIENTE;
-END Actualiza_Saldo;
+  SELECT user_name, user_email INTO p_user_name, p_user_email
+  FROM users WHERE user_id = p_user_id;
+
+  DBMS_OUTPUT.PUT_LINE(p_user || ' ' || p_user_name );
+
+  v3 := v1 || ' + ' || v2 || ' = ' || UPPER(v1) || ' ' || UPPER(v2);
+
+  SELECT job_id INTO jobid FROM employees WHERE employee_id = empid;
+
+  SELECT AVG(salary), MIN(salary), MAX(salary) INTO avg_sal, min_sal, max_sal
+      FROM employees, bosses WHERE job_id = jobid AND emp_id = boss_id;
+  
+  DELETE FROM customers WHERE last_name = 'Anderson' AND customer_id > 25;
+
+  DELETE FROM suppliers WHERE EXISTS
+  ( SELECT customers.customer_name
+    FROM customers
+    WHERE customers.customer_id = suppliers.supplier_id
+    AND customer_id > 25 );
+END get_user_details;
