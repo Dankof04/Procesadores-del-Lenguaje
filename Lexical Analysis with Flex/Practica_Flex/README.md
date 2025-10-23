@@ -1,100 +1,114 @@
-Enunciado provisional de la primera práctica.
+[Español](#-español) | [English](#-english)
 
-Usando flex crear un programa para procesar procedimientos PL/SQL.
+---
 
-Realizando las operaciones necesarias para que al finalizar el 
-procesado permita mostrar las siguientes estadísticas:
-- el número argumentos de entrada y de salida.
-- el número de variables locales.
-- la sentencia de borrado o actualización (UPDATE y DELETE) de mayor longitud.
-- el sentencia de consulta (SELECT) con mayor número de tablas y su número.
+## 🇪🇸 Español
 
-Los comentarios deberán ser ignorados así como el resto de sentencias. 
-Solo deberá tener en cuenta la creación de procedimientos, ignorando 
-borrados y actualizaciones
+# Analizador Léxico de Procedimientos SQL (con Flex) 🚀
 
-Se valorará el uso de definiciones regulares, correcto uso de
-las expresiones regulares, calidad del código, etc.
+Este proyecto es un analizador léxico, escrito en **Flex**, diseñado para procesar ficheros de procedimientos almacenados de SQL (similar a PL/SQL de Oracle). Su objetivo principal no es validar la sintaxis completa de SQL, sino **extraer estadísticas específicas** sobre la estructura y contenido de los procedimientos.
 
-El analizador debe ser capaz de analizar tanto la entrada estándar 
-como un fichero de texto que reciba como argumento.
+## 📊 Características Principales
 
-No se permite utilizar sscanf, strstr (o similares) para realizar análisis léxico 
-en el  código C, todo el procesamiento léxico deberá ser realizado con Flex.
+El analizador está configurado para:
 
-------------------------------------------------------------------
+* **Ignorar Mayúsculas/Minúsculas**: Gracias a `%option caseless`, el análisis no distingue entre `SELECT` y `select`.
+* **Manejar Comentarios**: Ignora comentarios de una sola línea (`-- ...`) y maneja comentarios multilínea (`/* ... */`) de forma robusta, incluso si se encuentran en medio de una sentencia.
+* **Contar Argumentos**: Detecta la definición de un `PROCEDURE` y cuenta cuántos argumentos se le pasan.
+* **Contar Variables Locales**: Cuenta el número de variables declaradas en la sección `IS/AS` antes del `BEGIN`.
+* **Analizar Sentencias `SELECT`**: Identifica la sentencia `SELECT` que consulta el **mayor número de tablas** y almacena la lista de dichas tablas.
+* **Analizar Sentencias `UPDATE` y `DELETE`**: Encuentra la sentencia `UPDATE` o `DELETE` **más larga** (por número de caracteres) y almacena su texto completo.
 
-Ante una entrada como la siguiente.
+---
 
-CREATE OR REPLACE
-  -- Entre paréntesis están los argumentos
-PROCEDURE Actualiza_Saldo(cuenta NUMBER, new_saldo NUMBER)
-IS
-  -- Aquí se encontraría la declaracion de las variables locales
-BEGIN
-  -- Sentencia de actualización
-  UPDATE SALDOS_CUENTAS
-    SET SALDO = new_saldo,
-    FX_ACTUALIZACION = SYSDATE
-    WHERE CO_CUENTA = cuenta;
-  -- Sentencia de consulta sobre tabla cliente
-  SELECT *
-  FROM CLIENTE;
-END Actualiza_Saldo;
+## ⚙️ Funcionamiento Interno: Una Máquina de Estados
 
-Debería devolver:
-- El procedimiento tiene 2 argumentos.
-- El número de variables locales es 0.
-- La sentencia de actualización/borrado más larga es:
-"UPDATE SALDOS_CUENTAS
-    SET SALDO = new_saldo,
-    FX_ACTUALIZACION = SYSDATE
-    WHERE CO_CUENTA = cuenta"
-- La consulta con mayor número de tablas tiene 1 y son: CLIENTE
+El analizador funciona como una **máquina de estados finitos**. Comienza en el estado `INITIAL` y transita a otros estados a medida que reconoce patrones (tokens) en el código de entrada.
 
+### Estados Definidos
 
+* `INITIAL`: El estado por defecto. Busca el inicio de un procedimiento (`PROCEDURE ... (`).
+* `COM`: Estado para manejar comentarios multilínea (`/* ... */`).
+* `ARGS`: Estado para contar los argumentos del procedimiento.
+* `VARS`: Estado para contar las variables locales.
+* `BODY`: Estado principal que procesa el cuerpo (lógica) del procedimiento.
+* `SELECT`: Estado específico para analizar las tablas de una sentencia `SELECT`.
+* `UPDATE`: Estado para procesar una sentencia `UPDATE`.
+* `DELETE`: Estado para procesar una sentencia `DELETE`.
 
-Ante una entrada como la siguiente.
+### Flujo de Ejecución
 
-CREATE PROCEDURE get_user_details
-(
-    p_user_id IN NUMBER,
-    p_user_name OUT VARCHAR2,
-    p_user_email OUT VARCHAR2
-)
-IS 
-    v1 VARCHAR2;
-    v2 VARCHAR2;
-    v3 VARCHAR2;
-BEGIN
-  SELECT user_name, user_email INTO p_user_name, p_user_email
-  FROM users WHERE user_id = p_user_id;
+1.  **Manejo de Comentarios (Estado `COM`)**:
+    * En cualquier estado (`<*>`), si se detecta `/*`, el analizador usa `yy_push_state(COM)` para "recordar" dónde estaba y salta al estado `COM`.
+    * En el estado `COM`, ignora todo el texto hasta que encuentra `*/`, momento en el que usa `yy_pop_state()` para regresar al estado anterior (ya sea `BODY`, `ARGS`, etc.).
+    * Los comentarios `--` se ignoran directamente.
 
-  DBMS_OUTPUT.PUT_LINE(p_user || ' ' || p_user_name );
+2.  **Definición del Procedimiento (Estados `INITIAL` -> `ARGS` -> `VARS`)**:
+    * En `INITIAL`, al encontrar `PROCEDURE nombre (...)`, cambia al estado `ARGS`.
+    * En `ARGS`, incrementa `contador_argumentos` por cada identificador que encuentra, ya sea seguido de coma (`,`) o de un paréntesis de cierre (`)`).
+    * Al encontrar `IS` o `AS`, transita al estado `VARS`.
+    * En `VARS`, incrementa `contador_variables` por cada declaración (asumida como `nombre_var tipo;`).
+    * Al encontrar `BEGIN`, el analizador entra en el cuerpo del procedimiento, pasando al estado `BODY`.
 
-  v3 := v1 || ' + ' || v2 || ' = ' || UPPER(v1) || ' ' || UPPER(v2);
+3.  **Cuerpo del Procedimiento (Estado `BODY`)**:
+    * Este es el estado "central". Desde aquí, el analizador busca las sentencias de interés:
+    * **`SELECT ... FROM`**: Al detectarse, cambia al estado `SELECT`.
+    * **`UPDATE` / `DELETE`**: Utiliza un operador de *lookahead* (`/UPDATE`, `/DELETE`) para detectar la palabra clave sin consumirla, y cambia al estado `UPDATE` o `DELETE` correspondiente.
+    * **`END ... ;`**: Al encontrar el final del bloque, regresa al estado `INITIAL` para buscar el siguiente procedimiento.
 
-  SELECT job_id INTO jobid FROM employees WHERE employee_id = empid;
+4.  **Análisis de `SELECT` (Estado `SELECT`)**:
+    * Este estado está diseñado para contar tablas entre `FROM` y `WHERE` o `;`.
+    * Utiliza `yymore()` para acumular el texto de todas las tablas en el búfer `yytext`.
+    * Cuenta las tablas (`contador_tablas`) separadas por comas.
+    * Al encontrar el final de la lista de tablas (detectado por un *lookahead* de `/;` o `/WHERE`), usa `strdup(yytext)` para guardar la lista de tablas actual en `tablas_text`.
+    * Cuando finalmente consume el `;` o `WHERE`, compara el `contador_tablas` actual con `max_tablas`. Si es mayor, actualiza `max_tablas` y guarda la lista de tablas en `max_tablas_text`.
+    * Finalmente, resetea `contador_tablas` y regresa a `BODY`.
 
-  SELECT AVG(salary), MIN(salary), MAX(salary) INTO avg_sal, min_sal, max_sal
-      FROM employees, bosses WHERE job_id = jobid AND emp_id = boss_id;
-  
-  DELETE FROM customers WHERE last_name = 'Anderson' AND customer_id > 25;
+5.  **Análisis de `UPDATE` / `DELETE` (Estados `UPDATE`, `DELETE`)**:
+    * Una vez en estos estados, consume toda la sentencia hasta encontrar un punto y coma (`;`).
+    * Obtiene la longitud de la sentencia con `yyleng`.
+    * Compara esta longitud con `max_long_up_del`. Si es mayor, actualiza el máximo y guarda el texto de la sentencia (`strdup(yytext)`) en `max_long_text`.
+    * Regresa al estado `BODY` para seguir analizando.
 
-  DELETE FROM suppliers WHERE EXISTS
-  ( SELECT customers.customer_name
-    FROM customers
-    WHERE customers.customer_id = suppliers.supplier_id
-    AND customer_id > 25 );
-END get_user_details;
+---
 
-Debería devolver:
-- El procedimiento tiene 3 argumentos.
-- El número de variables locales es 3.
-- La sentencia de actualización/borrado más larga es:
-"DELETE FROM suppliers WHERE EXISTS
-  ( SELECT customers.customer_name
-    FROM customers
-    WHERE customers.customer_id = suppliers.supplier_id
-    AND customer_id > 25 )"
-- La consulta con mayor número de tablas tiene 2 y son: employees, bosses
+## 💻 Cómo Compilar y Usar
+
+Para utilizar este analizador, necesitas tener **Flex** y un compilador de C (como **GCC**) instalados.
+
+### 1. Compilación
+
+Asumiendo que has guardado el código como `analizador.l`:
+
+1.  **Generar el código C con Flex**:
+    ```bash
+    flex analizador.l
+    ```
+    Esto creará un fichero llamado `lex.yy.c`.
+
+2.  **Compilar el código C con GCC**:
+    ```bash
+    gcc lex.yy.c -o analizador -lfl
+    ```
+    * `-o analizador`: Crea un ejecutable llamado `analizador`.
+    * `-lfl`: Enlaza la biblioteca de Flex (necesaria para `yywrap` y otras funciones).
+
+### 2. Ejecución
+
+Puedes ejecutar el analizador de dos maneras:
+
+* **Pasando un fichero como argumento**:
+    ```bash
+    ./analizador mi_procedimiento.sql
+    ```
+
+* **Usando la entrada estándar (stdin)**:
+    ```bash
+    cat mi_procedimiento.sql | ./analizador
+    ```
+
+---
+
+## 📄 Salida del Programa
+
+Tras procesar el fichero (o la entrada estándar), el programa imprimirá en la consola un resumen de las estadísticas recopiladas:
