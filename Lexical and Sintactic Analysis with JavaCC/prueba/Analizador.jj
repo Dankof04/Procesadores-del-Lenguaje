@@ -1,0 +1,333 @@
+/**
+ * Fichero JavaCC para un analizador de lenguaje simple
+ * que genera código de máquina de pila abstracta.
+ */
+options {
+  STATIC = false; // Recomendado para instanciar el parser
+}
+
+PARSER_BEGIN(Analizador)
+
+import java.io.*;
+
+public class Analizador {
+
+    // Contador para generar etiquetas únicas
+    int labelCount = 0;
+
+    /**
+     * Genera una nueva etiqueta única (ej. "LBL0", "LBL1").
+     */
+    String nuevaEtiqueta() {
+        return "LBL" + labelCount++;
+    }
+
+    /**
+     * Imprime una instrucción de código de pila con sangría.
+     */
+    void gen(String instruccion) {
+        System.out.println("\t" + instruccion);
+    }
+
+    /**
+     * Método principal para ejecutar el analizador.
+     * Lee de un fichero si se pasa como argumento, o de la entrada estándar si no.
+     */
+    public static void main(String[] args) throws ParseException, FileNotFoundException {
+        Analizador parser;
+        if (args.length == 0) {
+            System.out.println("Leyendo de la entrada estandar... (Presiona Ctrl+D o Ctrl+Z para finalizar)");
+            parser = new Analizador(System.in);
+        } else {
+            System.out.println("Leyendo del fichero: " + args[0]);
+            parser = new Analizador(new FileInputStream(args[0]));
+        }
+
+        try {
+            parser.Programa();
+            System.out.println("\nAnalisis completado con exito.");
+        } catch (Exception e) {
+            System.err.println("\nError durante el analisis: " + e.getMessage());
+            e.printStackTrace();
+        } catch (Error e) {
+            System.err.println("\nError fatal de analisis: " + e.getMessage());
+        }
+    }
+}
+
+PARSER_END(Analizador)
+
+/*
+ * --- SECCIÓN DE TOKENS ---
+ */
+
+/* 1. Ignorar espacios en blanco y saltos de línea */
+SKIP :
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+| "\f"
+}
+
+/* 2. Ignorar comentarios (SKIP) */
+SKIP :
+{
+  // Comentario en línea (expresión regular simple)
+  <"//" (~["\n", "\r"])*>
+|
+  // Comentario multilínea (expresión regular simple)
+  <"/*" (~["*"])* "*" (~["/"] (~["*"])* "*")* "/">
+}
+
+/* 3. Palabras reservadas */
+TOKEN :
+{
+  < IMPRIMIR: "imprimir" >
+| < SI: "si" >
+| < SINO: "sino" >
+| < MIENTRAS: "mientras" >
+| < HACER: "hacer" >
+}
+
+/* 4. Operadores y Delimitadores */
+TOKEN :
+{
+    < ASSIGN: "=" >
+  | < PLUSASSIGN: "+=" >
+  | < MINUSASSIGN: "-=" >
+  | < MULASSIGN: "*=" >
+  | < DIVASSIGN: "/=" >
+  | < PLUS: "+" >
+  | < MINUS: "-" >
+  | < MUL: "*" >
+  | < DIV: "/" >
+  | < LPAREN: "(" >
+  | < RPAREN: ")" >
+  | < LBRACE: "{" >
+  | < RBRACE: "}" >
+  | < SEMICOLON: ";" >
+}
+
+/* 5. Literales (Números e Identificadores) */
+TOKEN :
+{
+  // Número entero positivo
+  < NUM: (["0"-"9"])+ >
+|
+  // Identificador
+  < ID: (["a"-"z", "A"-"Z", "_"]) (["a"-"z", "A"-"Z", "0"-"9", "_"])* >
+}
+
+
+/*
+ * --- SECCIÓN DE LA GRAMÁTICA (PRODUCCIONES) ---
+ */
+
+/**
+ * Producción inicial. Un programa es una lista de sentencias
+ * separadas por punto y coma, seguida del fin de fichero.
+ */
+void Programa():
+{}
+{
+  ( sntnc() ";" )* <EOF>
+}
+
+/**
+ * Una sentencia puede ser una selección, iteración, asignación o impresión.
+ */
+void sntnc():
+{}
+{
+  sel_stmt()
+| iter_stmt()
+| assig_stmt()
+| print_stmt()
+}
+
+/**
+ * Sentencia de impresión: 'imprimir' '(' expr ')'
+ */
+void print_stmt():
+{}
+{
+  <IMPRIMIR> <LPAREN> expr() <RPAREN>
+  {
+    gen("print");
+  }
+}
+
+/**
+ * Sentencia de selección (if-then o if-then-else).
+ * 'si' '(' expr ')' '{' list_sntncs '}'
+ * [ 'sino' '{' list_sntncs '}' ]
+ */
+void sel_stmt():
+{
+  String etqSino, etqSalida;
+}
+{
+  <SI> <LPAREN> expr() <RPAREN>
+  {
+    etqSino = nuevaEtiqueta();
+    etqSalida = etqSino; // Por defecto, la salida es la etiqueta 'sino'
+    gen("sifalsovea " + etqSino);
+  }
+  <LBRACE> ( sntnc() ";" )* <RBRACE>
+  (
+    // Parte opcional 'sino'
+    <SINO>
+    {
+      etqSalida = nuevaEtiqueta(); // Hay 'sino', la salida es una nueva etiqueta
+      gen("vea " + etqSalida); // Salta el bloque 'sino'
+      gen(etqSino);           // Etiqueta para el bloque 'sino'
+    }
+    <LBRACE> ( sntnc() ";" )* <RBRACE>
+  )?
+  {
+    gen(etqSalida); // Genera la etiqueta de salida (sea 'etqSino' o 'etqSalida')
+  }
+}
+
+/**
+ * Sentencia de iteración (while o do-while).
+ */
+void iter_stmt():
+{
+  String etqComienzo, etqSalida;
+}
+{
+  // 'mientras' '(' expr ')' '{' list_sntncs '}'
+  <MIENTRAS>
+  {
+    etqComienzo = nuevaEtiqueta();
+    etqSalida = nuevaEtiqueta();
+    gen(etqComienzo); // Etiqueta de inicio de bucle (para re-evaluar)
+  }
+  <LPAREN> expr() <RPAREN>
+  {
+    gen("sifalsovea " + etqSalida); // Si es falso, sal del bucle
+  }
+  <LBRACE> ( sntnc() ";" )* <RBRACE>
+  {
+    gen("vea " + etqComienzo); // Vuelve al inicio
+    gen(etqSalida);          // Etiqueta de salida
+  }
+|
+  // 'hacer' '{' list_sntncs '}' 'mientras' '(' expr ')'
+  <HACER>
+  {
+    etqComienzo = nuevaEtiqueta();
+    gen(etqComienzo); // Etiqueta de inicio del cuerpo
+  }
+  <LBRACE> ( sntnc() ";" )* <RBRACE>
+  <MIENTRAS> <LPAREN> expr() <RPAREN>
+  {
+    gen("siciertovea " + etqComienzo); // Si es cierto, repite
+  }
+}
+
+/**
+ * Sentencia de asignación: ID (= | += | -= | *= | /=) expr
+ */
+void assig_stmt():
+{
+  Token t;
+}
+{
+  t = <ID>
+  {
+    // Siempre empezamos cargando la *dirección* (valori)
+    gen("valori " + t.image);
+  }
+  (
+    // Caso: ID = expr
+    <ASSIGN> expr()
+  |
+    // Caso: ID += expr (se traduce a ID = ID + expr)
+    <PLUSASSIGN>
+    { gen("valord " + t.image); } // Carga el valor actual de ID
+    expr()                         // Evalúa la expresión
+    { gen("sum"); }               // Suma
+  |
+    // Caso: ID -= expr (se traduce a ID = ID - expr)
+    <MINUSASSIGN>
+    { gen("valord " + t.image); } // Carga el valor actual
+    expr()                         // Evalúa la expresión
+    { gen("sub"); }               // Resta
+  |
+    // Caso: ID *= expr (se traduce a ID = ID * expr)
+    <MULASSIGN>
+    { gen("valord " + t.image); } // Carga el valor actual
+    expr()                         // Evalúa la expresión
+    { gen("mul"); }               // Multiplica
+  |
+    // Caso: ID /= expr (se traduce a ID = ID / expr)
+    <DIVASSIGN>
+    { gen("valord " + t.image); } // Carga el valor actual
+    expr()                         // Evalúa la expresión
+    { gen("div"); }               // Divide (usamos 'div' por consistencia)
+  )
+  {
+    // El valor resultante está en la pila, 'valori' ya puso la dirección.
+    // Asignamos el valor a la dirección.
+    gen("asigna");
+  }
+}
+
+/**
+ * Expresión (aditiva).
+ * expr -> mult_expr ( ( '+' | '-' ) mult_expr )*
+ */
+void expr():
+{}
+{
+  mult_expr()
+  (
+    <PLUS> mult_expr() { gen("sum"); }
+  |
+    <MINUS> mult_expr() { gen("sub"); }
+  )*
+}
+
+/**
+ * Expresión (multiplicativa).
+ * mult_expr -> val ( ( '*' | '/' ) val )*
+ */
+void mult_expr():
+{}
+{
+  val()
+  (
+    <MUL> val() { gen("mul"); }
+  |
+    <DIV> val() { gen("div"); } // Asumimos 'div' para la división
+  )*
+}
+
+/**
+ * Valor (unidad básica de una expresión).
+ * val -> NUM | ID | '(' expr ')'
+ */
+void val():
+{
+  Token t;
+}
+{
+  // Caso: Un número
+  t = <NUM>
+  {
+    gen("mete " + t.image); // Carga un valor literal
+  }
+|
+  // Caso: Un identificador
+  t = <ID>
+  {
+    gen("valord " + t.image); // Carga el valor de una variable
+  }
+|
+  // Caso: Una expresión entre paréntesis
+  <LPAREN> expr() <RPAREN>
+}

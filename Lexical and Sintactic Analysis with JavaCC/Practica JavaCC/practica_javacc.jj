@@ -1,0 +1,35 @@
+options={DEBUG_TOKEN_MANAGER=true;}
+
+
+PARSER_BEGIN(Parser_practica)
+
+public class Parser_practica {
+    public static void main(String args[]) throws ParseException {
+        Parser_practica parser = new Parser_practica(System.in);
+        parser.axioma();
+}
+
+}
+PARSER_END(Parser_practica)
+
+TOKEN:
+{
+    < PUNTO_COMA: ";" > |
+    < IMPRIMIR: "imprimir" > |
+    < PAREN_IZQ: "(" > |
+    < PAREN_DER: ")" > |
+    < SI: "si" > |
+    < LLAVE_IZQ: "{" > |
+    < LLAVE_DER: "}" > |
+    < SINO: "sino" > |
+    < MIENTRAS: "mientras" > |
+    < HACER: "hacer" > |
+    
+}
+
+
+TOKEN:
+{
+    < ID: ["a"-"z","A"-"Z","_"] (["a"-"z","A"-"Z","0"-"9","_"])* >   |
+    < NUM: (["0"-"9"])+ >
+}

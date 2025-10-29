@@ -1,0 +1,40 @@
+options {
+BUILD_TOKEN_MANAGER=true;
+COMMON_TOKEN_ACTION=false;
+}
+
+
+
+
+PARSER_BEGIN(test)
+public class test {
+
+    public static void main(String args[]) throws ParseException {
+	testTokenManager tkmngr = new testTokenManager( new SimpleCharStream(System.in) );
+	Token tk;
+
+	System.out.print("Enter Expression: ");
+	System.out.flush();
+	
+	try {
+        	while ( (tk = tkmngr.getNextToken()).kind != EOF ) 
+        	   if ( tk.kind == NUMERO ) System.out.println("NUMERO\n");
+        	   else System.out.println("  <<<"+tk.image+">>>");
+	} catch (TokenMgrError x) {
+		System.out.println("Exiting.");
+		throw x;
+	}
+    }
+}
+PARSER_END(test)
+
+
+
+
+
+
+
+TOKEN:
+{
+   <NUMERO: ["0"-"9"]+ >			{System.out.print("<N>"+image+"<N>");} 
+}

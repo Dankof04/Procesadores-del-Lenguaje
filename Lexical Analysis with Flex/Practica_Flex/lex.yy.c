@@ -756,9 +756,9 @@ int yy_flex_debug = 1;
 
 static const flex_int16_t yy_rule_linenum[27] =
     {   0,
-       26,   27,   30,   31,   34,   35,   36,   37,   41,   42,
-       43,   44,   47,   48,   50,   51,   52,   53,   55,   64,
-       73,   74,   75,   76,   77,   80
+       36,   37,   40,   41,   46,   47,   48,   54,   60,   61,
+       62,   63,   69,   70,   77,   78,   79,   84,   90,   99,
+      115,  116,  117,  120,  121,  124
     } ;
 
 /* The intent behind this definition is that it'll catch
@@ -773,7 +773,7 @@ static int yy_more_len = 0;
 char *yytext;
 #line 1 "practica_flex.l"
 #line 2 "practica_flex.l"
-//Declaración de variables
+//Declaración de variables, incluyendo las numéricas y las que albergarán texto, inicializando las mismas a 0 y a NULL respectivamente
 int contador_argumentos=0;
 int contador_variables=0;
 int contador_tablas=0;
@@ -784,8 +784,12 @@ char *tablas_text=NULL;
 char *max_tablas_text=NULL;
 char *max_long_text=NULL;
 #line 787 "lex.yy.c"
+#line 16 "practica_flex.l"
+ //Creamos los diferentes estados por los que viajaremos a lo largo del programa. COM es inclusivo porque podemos encontrarnos un comentario en cualquier parte del programa
 
-#line 789 "lex.yy.c"
+
+ //Con option indicamos la utilización de la pila y de la opción Caseless, para trabajar con mayúsculas y minúsculas de forma más sencilla
+#line 793 "lex.yy.c"
 
 #define INITIAL 0
 #define COM 1
@@ -1082,10 +1086,14 @@ YY_DECL
 
 	{
 /* %% [7.0] user's declarations go here */
-#line 24 "practica_flex.l"
+#line 30 "practica_flex.l"
 
 
-#line 1089 "lex.yy.c"
+
+//Con <*> indicamos que estas expresiones regulares se pueden encontrar en cualquier parte del programa, en cualquier estado
+
+
+#line 1097 "lex.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -1174,138 +1182,164 @@ do_action:	/* This label is used only to access EOF actions. */
 case 1:
 /* rule 1 can match eol */
 YY_RULE_SETUP
-#line 26 "practica_flex.l"
+#line 36 "practica_flex.l"
 {/* Ignorar comentario de una línea */}
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 27 "practica_flex.l"
-{ yy_push_state(COM); }
+#line 37 "practica_flex.l"
+{ yy_push_state(COM); /* Introducimos en la pila el estado actual y viajamos a COM */}
 	YY_BREAK
 case 3:
 /* rule 3 can match eol */
 YY_RULE_SETUP
-#line 30 "practica_flex.l"
+#line 40 "practica_flex.l"
 {}
 	YY_BREAK
 case 4:
 /* rule 4 can match eol */
 YY_RULE_SETUP
-#line 31 "practica_flex.l"
-{ yy_pop_state(); }
+#line 41 "practica_flex.l"
+{ yy_pop_state(); /* Sacamos de la pila el ultimo estado almacenado y viajamos al mismo */}
 	YY_BREAK
+
+//Estas siguientes tres expresiones regulares no sirven para nada, más allá de la mera practica. A efectos de análisis, no harán nada más que detectar un CREATE, un OR o un REPLACE, sin ninguna acción.
+
 case 5:
 YY_RULE_SETUP
-#line 34 "practica_flex.l"
+#line 46 "practica_flex.l"
 
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 35 "practica_flex.l"
+#line 47 "practica_flex.l"
 
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 36 "practica_flex.l"
+#line 48 "practica_flex.l"
 
 	YY_BREAK
+
+//Si detectamos un PROCEDURE seguido de su nombre y un parentesis abierto, pasamos al estado ARGS para contar los argumentos
+
 case 8:
 /* rule 8 can match eol */
 YY_RULE_SETUP
-#line 37 "practica_flex.l"
+#line 54 "practica_flex.l"
 { BEGIN(ARGS); }
 	YY_BREAK
+
+//Aquí tenemos dos tipos de argumentos, los intermedios (seguidos de coma) y los finales (seguidos de un cierre de paréntesis). El punto a través del cual pasaremos al siguiente estado será IS o AS
+
 case 9:
 /* rule 9 can match eol */
 YY_RULE_SETUP
-#line 41 "practica_flex.l"
+#line 60 "practica_flex.l"
 { contador_argumentos++; }
 	YY_BREAK
 case 10:
 /* rule 10 can match eol */
 YY_RULE_SETUP
-#line 42 "practica_flex.l"
+#line 61 "practica_flex.l"
 { contador_argumentos++; }
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 43 "practica_flex.l"
+#line 62 "practica_flex.l"
 { BEGIN(VARS); }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 44 "practica_flex.l"
+#line 63 "practica_flex.l"
 { BEGIN(VARS); }
 	YY_BREAK
+
+//Simplemente contamos las variables, que podrán estar seguidas de un salto de línea. Cuando detectemos el BEGIN, pasaremos a lo que sería el cuerpo del procedimiento
+
 case 13:
 /* rule 13 can match eol */
 YY_RULE_SETUP
-#line 47 "practica_flex.l"
+#line 69 "practica_flex.l"
 { contador_variables++; }
 	YY_BREAK
 case 14:
 /* rule 14 can match eol */
 YY_RULE_SETUP
-#line 48 "practica_flex.l"
+#line 70 "practica_flex.l"
 { BEGIN(BODY); }
 	YY_BREAK
+
+//Aquí tenemos las diferentes condiciones para viajar a cada estado, si detectamos SELECt con texto en medio y un FROM, viajamos a SELECT, y si detectamos un UPDATE o un DELETE, usamos un lookahead para no introducirlo en yytext y poder volver a leerlo después
+
 case 15:
 /* rule 15 can match eol */
 YY_RULE_SETUP
-#line 50 "practica_flex.l"
-{ yy_push_state(SELECT);}
+#line 77 "practica_flex.l"
+{ BEGIN(SELECT);}
 	YY_BREAK
 case 16:
 *yy_cp = (yy_hold_char); /* undo effects of setting up yytext */
 (yy_c_buf_p) = yy_cp = yy_bp + 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 51 "practica_flex.l"
-{ yy_push_state(UPDATE); }
+#line 78 "practica_flex.l"
+{ BEGIN(UPDATE); }
 	YY_BREAK
 case 17:
 *yy_cp = (yy_hold_char); /* undo effects of setting up yytext */
 (yy_c_buf_p) = yy_cp = yy_bp + 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 52 "practica_flex.l"
-{ yy_push_state(DELETE); }
+#line 79 "practica_flex.l"
+{ BEGIN(DELETE); }
 	YY_BREAK
+
+//Si detectamos un END seguido de texto y ;, volvemos a INITIAL tal y como se muestra en el diagrama de estados proporcionado
+
 case 18:
 /* rule 18 can match eol */
 YY_RULE_SETUP
-#line 53 "practica_flex.l"
+#line 84 "practica_flex.l"
 { BEGIN(INITIAL); }
 	YY_BREAK
+
+//En estos dos casos simplemente establecemos la longitud si fuera mayor a la que tenemos registrada previamente y volvemos a BODY por si hubiera más operaciones UPDATE o DELETE
+
 case 19:
 /* rule 19 can match eol */
 YY_RULE_SETUP
-#line 55 "practica_flex.l"
+#line 90 "practica_flex.l"
 {   long_up_del=yyleng; 
-                                                                    if(long_up_del>max_long_up_del){ 
-                                                                        max_long_text=strdup(yytext); 
-                                                                        max_long_up_del=long_up_del; 
-                                                                    }
-                                                                    long_up_del=0;
-                                                                    yy_pop_state();
-                                                                } 
+                                                                            if(long_up_del>max_long_up_del){ 
+                                                                                max_long_text=strdup(yytext); 
+                                                                                max_long_up_del=long_up_del; 
+                                                                            }
+                                                                            long_up_del=0;
+                                                                            BEGIN(BODY);
+                                                                        } 
 	YY_BREAK
 case 20:
 /* rule 20 can match eol */
 YY_RULE_SETUP
-#line 64 "practica_flex.l"
+#line 99 "practica_flex.l"
 {   long_up_del=yyleng; 
-                                                                    if(long_up_del>max_long_up_del){ 
-                                                                        max_long_text=strdup(yytext); 
-                                                                        max_long_up_del=long_up_del; 
-                                                                    }
-                                                                    long_up_del=0;
-                                                                    yy_pop_state();
-                                                                }                                      
+                                                                            if(long_up_del>max_long_up_del){ 
+                                                                                max_long_text=strdup(yytext); 
+                                                                                max_long_up_del=long_up_del; 
+                                                                            }
+                                                                            long_up_del=0;
+                                                                            BEGIN(BODY);
+                                                                        }                                      
 	YY_BREAK
+
+//Aquí manejamos las tablas del SELECT, en la que tenemos dos opciones: tabla intermedia y tabla final. La tabla intermedia es texto seguido por una coma, mientras que la final acaba en WHERE o en ;
+//Recogemos el texto para cada expresion regular con yymore, para luego copiarlo en una variable adicional con strdup y asi almacenar el mayor numero de tablas
+//Usamos el lookahead / para exigir ciertos caracteres en la expresión regular pero no incluirlos en yytext, para procesarlos despues y poder salir facilmente del estado SELECT
+
 case 21:
 YY_RULE_SETUP
-#line 73 "practica_flex.l"
+#line 115 "practica_flex.l"
 { contador_tablas++; yymore(); }
 	YY_BREAK
 case 22:
@@ -1313,7 +1347,7 @@ case 22:
 (yy_c_buf_p) = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 74 "practica_flex.l"
+#line 116 "practica_flex.l"
 { contador_tablas++; yymore(); tablas_text=strdup(yytext); }
 	YY_BREAK
 case 23:
@@ -1321,31 +1355,31 @@ case 23:
 (yy_c_buf_p) = yy_cp -= 5;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 75 "practica_flex.l"
+#line 117 "practica_flex.l"
 { contador_tablas++; yymore(); tablas_text=strdup(yytext); }
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 76 "practica_flex.l"
-{ if(contador_tablas>max_tablas){max_tablas=contador_tablas; max_tablas_text=strdup(tablas_text); }; contador_tablas=0; yy_pop_state(); }
+#line 120 "practica_flex.l"
+{ if(contador_tablas>max_tablas){max_tablas=contador_tablas; max_tablas_text=strdup(tablas_text); }; contador_tablas=0; BEGIN(BODY); }
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 77 "practica_flex.l"
-{ if(contador_tablas>max_tablas){max_tablas=contador_tablas; max_tablas_text=strdup(tablas_text); }; contador_tablas=0; yy_pop_state(); }
+#line 121 "practica_flex.l"
+{ if(contador_tablas>max_tablas){max_tablas=contador_tablas; max_tablas_text=strdup(tablas_text); }; contador_tablas=0; BEGIN(BODY); }
 	YY_BREAK
 case 26:
 /* rule 26 can match eol */
 YY_RULE_SETUP
-#line 80 "practica_flex.l"
+#line 124 "practica_flex.l"
 {} 
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 81 "practica_flex.l"
+#line 125 "practica_flex.l"
 ECHO;
 	YY_BREAK
-#line 1349 "lex.yy.c"
+#line 1383 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 case YY_STATE_EOF(COM):
 case YY_STATE_EOF(ARGS):
@@ -2559,7 +2593,7 @@ void yyfree (void * ptr )
 
 /* %ok-for-header */
 
-#line 81 "practica_flex.l"
+#line 125 "practica_flex.l"
 
 
 int main(int argc, char **argv){
@@ -2578,12 +2612,10 @@ int main(int argc, char **argv){
 
     yylex();
 
-    printf("Número de argumentos: %d\n", contador_argumentos);
-    printf("Número de variables locales: %d\n", contador_variables);
-    printf("La consulta SELECT con más tablas tiene %d\n y son: %s\n", max_tablas,max_tablas_text);
-    printf("La operación UPDATE o DELETE con mayor número de caracteres es: %s\n", max_long_text);
+    printf("- Número de argumentos: %d\n", contador_argumentos);
+    printf("- Número de variables locales: %d\n", contador_variables);
+    printf("- La operación UPDATE o DELETE con mayor número de caracteres es: \n\"%s\"\n", max_long_text);
+    printf("- La consulta SELECT con más tablas tiene %d y son: %s\n", max_tablas,max_tablas_text);
 
-    free(tablas_text);
-    free(max_tablas_text);
     return 0;
 }
