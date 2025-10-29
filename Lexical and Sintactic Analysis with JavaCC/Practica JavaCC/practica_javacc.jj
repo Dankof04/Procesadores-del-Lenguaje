@@ -15,16 +15,28 @@ PARSER_END(Parser_practica)
 TOKEN:
 {
     < PUNTO_COMA: ";" > |
-    < IMPRIMIR: "imprimir" > |
     < PAREN_IZQ: "(" > |
     < PAREN_DER: ")" > |
-    < SI: "si" > |
     < LLAVE_IZQ: "{" > |
     < LLAVE_DER: "}" > |
+    < IGUAL: "=" > |
+    < MAS_IGUAL: "+=" > |
+    < MENOS_IGUAL: "-=" > |
+    < MULT_IGUAL: "*=" > |
+    < DIV_IGUAL: "/=" > |
+    < SUMA: "+" > |
+    < RESTA: "-" > |
+    < MULT: "*" > |
+    < DIV: "/" >
+}
+
+TOKEN:
+{
+    < IMPRIMIR: "imprimir" > |
+    < SI: "si" > |
     < SINO: "sino" > |
     < MIENTRAS: "mientras" > |
-    < HACER: "hacer" > |
-    
+    < HACER: "hacer" >
 }
 
 
