@@ -12,6 +12,18 @@ public class Parser_practica {
 }
 PARSER_END(Parser_practica)
 
+// Definición de los tokenes que representan espacios en blanco y comentarios, que serán ignorados por el parser
+SKIP :
+{
+    < ESPACIO: " "+ > |
+    < TABULACION: "\t"+ > |
+    < SALTO_LINEA: "\n"+ > |
+    < COMENTARIO_LINEA: "//" (~["\n"])* > |
+    // /* comen * tario */
+    < COMENTARIO_MULTI: "/*" (~["*"])* "*" ( ~["/"] (~["*"])* "*" )* "/" >
+}
+
+// Definición de los tokenes cuyas expresiones regulares contienen símbolos usados en la gramática
 TOKEN:
 {
     < PUNTO_COMA: ";" > |
@@ -30,6 +42,7 @@ TOKEN:
     < DIV: "/" >
 }
 
+// Definición de los tokenes cuyas expresiones regulares contienen palabras reservadas por la gramática
 TOKEN:
 {
     < IMPRIMIR: "imprimir" > |
@@ -39,7 +52,7 @@ TOKEN:
     < HACER: "hacer" >
 }
 
-
+// Definición de los tokenes cuyas expresiones regulares contienen identificadores y números, axiomas de la gramática
 TOKEN:
 {
     < ID: ["a"-"z","A"-"Z","_"] (["a"-"z","A"-"Z","0"-"9","_"])* >   |
