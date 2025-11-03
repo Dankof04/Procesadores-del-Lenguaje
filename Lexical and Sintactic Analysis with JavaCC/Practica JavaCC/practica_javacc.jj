@@ -58,3 +58,11 @@ TOKEN:
     < ID: ["a"-"z","A"-"Z","_"] (["a"-"z","A"-"Z","0"-"9","_"])* >   |
     < NUM: (["0"-"9"])+ >
 }
+
+void val():
+{}
+{
+    <NUM> |
+    <ID> |
+    <PAREN_IZQ> expr() <PAREN_DER>
+}
