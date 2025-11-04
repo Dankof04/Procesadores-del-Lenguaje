@@ -59,6 +59,16 @@ TOKEN:
     < NUM: (["0"-"9"])+ >
 }
 
+
+
+
+
+void mult_expr():
+{}
+{
+    val() ( <DIV> expr() | <MULT> expr())*
+}
+
 void val():
 {}
 {
