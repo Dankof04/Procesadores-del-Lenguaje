@@ -61,7 +61,11 @@ TOKEN:
 
 
 
-
+void expr():
+{}
+{
+    mult_expr() (<SUMA> mult_expr() | <RESTA> mult_expr())*
+}
 
 void mult_expr():
 {}
@@ -76,3 +80,4 @@ void val():
     <ID> |
     <PAREN_IZQ> expr() <PAREN_DER>
 }
+
