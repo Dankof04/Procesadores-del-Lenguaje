@@ -4,9 +4,17 @@ options={DEBUG_TOKEN_MANAGER=true;}
 PARSER_BEGIN(Parser_practica)
 
 public class Parser_practica {
+
+    int label=0
+
+    public String siguiente_etiqueta(){
+        return "LBL" + label++;
+    }
+
+
     public static void main(String args[]) throws ParseException {
         Parser_practica parser = new Parser_practica(System.in);
-        parser.axioma();
+        parser.list_sntncs();
 }
 
 }
@@ -60,6 +68,44 @@ TOKEN:
 }
 
 
+void list_sntncs():
+{}
+{
+    (sntnc() <PUNTO_COMA)* <EOF>
+}
+
+void sntnc():
+{}
+{
+    sel_stmt() | iter_stmt() | assig_stmt() | print_stmt()
+}
+
+void print_stmt():
+{}
+{
+    <IMPRIMIR> <PAREN_IZQ> expr() <PAREN_DER>
+}
+
+
+void sel_stmt():
+{}
+{
+    <SI> <PAREN_IZQ> expr() <PAREN_DER> <LLAVE_IZQ> ( sntnc() <PUNTO_COMA> )* <LLAVE_DER> (<SINO> <LLAVE_IZQ> ( sntnc() <PUNTO_COMA> )* <LLAVE_DER>)?
+}
+
+
+void iter_stmt():
+{}
+{
+    (<MIENTRAS> <PAREN_IZQ> expr() <PAREN_DER> <LLAVE_IZQ> ( sntnc() <PUNTO_COMA> )* <LLAVE_DER>) | (<HACER> <LLAVE_IZQ> ( sntnc() <PUNTO_COMA> )* <LLAVE_DER> <MIENTRAS> <PAREN_IZQ> expr() <PAREN_DER> )
+}
+
+
+void assig_stmt():
+{}
+{
+    <ID> (<IGUAL> expr() | <MAS_IGUAL> expr() | <MENOS_IGUAL> expr() | <MULT_IGUAL> expr() | <DIV_IGUAL> expr())
+}
 
 void expr():
 {}
@@ -70,14 +116,33 @@ void expr():
 void mult_expr():
 {}
 {
-    val() ( <DIV> expr() | <MULT> expr())*
+    val() ( <DIV> val() 
+    {
+        System.out.println("\tdiv ");
+
+    }
+    | <MULT> val()
+    {
+        System.out.println("\tmul ");
+    }
+    )*
 }
 
 void val():
-{}
 {
-    <NUM> |
-    <ID> |
+    Token t;
+}
+{
+    t = <NUM> 
+    {
+        System.out.println("\tmete " + t.image);
+    }
+    |
+    t= <ID> 
+    {
+        System.out.println("\tvalord " + t.image);
+    }
+    |
     <PAREN_IZQ> expr() <PAREN_DER>
 }
 
