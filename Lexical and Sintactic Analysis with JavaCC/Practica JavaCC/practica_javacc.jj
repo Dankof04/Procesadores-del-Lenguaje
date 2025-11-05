@@ -84,6 +84,9 @@ void print_stmt():
 {}
 {
     <IMPRIMIR> <PAREN_IZQ> expr() <PAREN_DER>
+    {
+        System.out.println("\tprint");
+    }
 }
 
 
@@ -95,16 +98,73 @@ void sel_stmt():
 
 
 void iter_stmt():
-{}
+{   
+    String lbl_Bucle=siguiente_etiqueta();
+    String lbl_Salida=siguiente_etiqueta();
+}
 {
-    (<MIENTRAS> <PAREN_IZQ> expr() <PAREN_DER> <LLAVE_IZQ> ( sntnc() <PUNTO_COMA> )* <LLAVE_DER>) | (<HACER> <LLAVE_IZQ> ( sntnc() <PUNTO_COMA> )* <LLAVE_DER> <MIENTRAS> <PAREN_IZQ> expr() <PAREN_DER> )
+    (<MIENTRAS> 
+    {
+        System.out.println(lbl_Bucle);
+    }
+    <PAREN_IZQ> expr() <PAREN_DER> 
+    {
+        System.out.println("\tsifalsovea " + lbl_Salida);
+    }
+    <LLAVE_IZQ> ( sntnc() <PUNTO_COMA> )* <LLAVE_DER>) | (<HACER> <LLAVE_IZQ> ( sntnc() <PUNTO_COMA> )* <LLAVE_DER> <MIENTRAS> <PAREN_IZQ> expr() <PAREN_DER> )
 }
 
 
 void assig_stmt():
-{}
 {
-    <ID> (<IGUAL> expr() | <MAS_IGUAL> expr() | <MENOS_IGUAL> expr() | <MULT_IGUAL> expr() | <DIV_IGUAL> expr())
+    Token t;
+}
+{
+    t = <ID> 
+    {
+        System.out.println("\tvalori " + t.image);
+    }
+    (<IGUAL> expr() 
+    {
+        System.out.println("\tasigna")
+    }
+    | <MAS_IGUAL> 
+    {
+        System.out.println("\tvalord " + t.image);
+    }
+    expr() 
+    {
+        System.out.println("\tsum")
+        System.out.println("\tasigna")
+    }
+    | <MENOS_IGUAL> 
+    {
+        System.out.println("\tvalord " + t.image);
+    }
+    expr() 
+    {
+        System.out.println("\tsub")
+        System.out.println("\tasigna")
+    }
+    | <MULT_IGUAL> 
+    {
+        System.out.printl("\tvalord " + t.image);
+    }
+    expr() 
+    {
+        System.out.println("\tmul")
+        System.out.println("\tasigna")
+    }
+    | <DIV_IGUAL> 
+    {
+        System.out.println("\tvalord " + t.image);
+    }
+    expr()
+    {
+        System.out.println("\tdiv")
+        System.out.println("\tasigna")
+    }
+    )
 }
 
 void expr():
