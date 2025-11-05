@@ -110,7 +110,15 @@ void assig_stmt():
 void expr():
 {}
 {
-    mult_expr() (<SUMA> mult_expr() | <RESTA> mult_expr())*
+    mult_expr() (<SUMA> mult_expr() 
+    {
+        System.out.println("\tsum ");
+    }
+    | <RESTA> mult_expr()
+    {
+        System.out.println("\tsub ");
+    }
+    )*
 }
 
 void mult_expr():
