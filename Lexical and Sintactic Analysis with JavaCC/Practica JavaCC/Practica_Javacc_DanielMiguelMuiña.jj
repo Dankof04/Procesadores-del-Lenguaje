@@ -1,0 +1,289 @@
+/*
+ * Autor: Daniel Miguel Muiña
+ * Correo electrónico: dmm1017@alu.ubu.es
+ * Versión: 1.0
+ * Descripción: Programa en JavaCC con el que implementamos un parser para un lenguaje sencillo que incluye sentencias de asignación, selección, iteración e impresión.
+ * Asignatura: Procesadores del Lenguaje
+ * Curso: 2025/2026
+ * Profesor: Alvar Arnáiz González
+ */
+
+// Con esta opción elegimos generar o no código de depuración para el gestor de tokens
+options {DEBUG_TOKEN_MANAGER=false;}
+
+// Comenzamos la definición del parser
+PARSER_BEGIN(Parser_practica)
+
+
+// Definimos la clase Parser_practica
+public class Parser_practica {
+
+    // Definimos una variable estática para llevar un registro de las etiquetas generadas
+    static int label=0;
+
+    // Creamos un método para generar la siguiente etiqueta
+    public static String siguiente_etiqueta(){
+        return "LBL" + label++;     // Simplemente devuelve la cadena "LBL" seguida del numero actual para la etiqueta y luego incrementa el contador
+    }
+
+    // Creamos el main para ejecutar el parser
+    public static void main(String args[]) throws ParseException, java.io.FileNotFoundException {
+        
+        // Instanciamos el parser
+        Parser_practica parser;
+
+        // Verificamos si se ha pasado un argumento al ejecutar el programa
+        if ( args.length < 1 ) {
+            // Si el argumento es menor que 1 significa que no se ha pasado ningín fichero, por lo que se utilizará la entrada estándar
+            parser = new Parser_practica(System.in);
+        } else {
+            // Si se ha pasado un argumento, se utilizará el fichero del mismo como entrada
+            parser = new Parser_practica(new java.io.FileInputStream(args[0]));
+        }
+
+        // Ejecuta el parser comenzando por el axioma, que corresponde a la producción list_sntncs
+        parser.list_sntncs();
+    }
+}
+
+PARSER_END(Parser_practica)
+
+// Definición de los tokenes que representan espacios en blanco y comentarios, que serán ignorados por el parser
+SKIP :
+{
+    < ESPACIO: (" ")+ > |
+    < TABULACION: ("\t")+ > |
+    < SALTO_LINEA: ("\n")+ > |
+    < COMENTARIO_LINEA: "//" (~["\n"])* > |
+    < COMENTARIO_MULTI: "/*" (~["*"])* "*" ( ~["/"] (~["*"])* "*" )* "/" >
+}
+
+// Definición de los tokenes cuyas expresiones regulares contienen símbolos usados en la gramática
+TOKEN:
+{
+    < PUNTO_COMA: ";" > |
+    < PAREN_IZQ: "(" > |
+    < PAREN_DER: ")" > |
+    < LLAVE_IZQ: "{" > |
+    < LLAVE_DER: "}" > |
+    < IGUAL: "=" > |
+    < MAS_IGUAL: "+=" > |
+    < MENOS_IGUAL: "-=" > |
+    < MULT_IGUAL: "*=" > |
+    < DIV_IGUAL: "/=" > |
+    < SUMA: "+" > |
+    < RESTA: "-" > |
+    < MULT: "*" > |
+    < DIV: "/" >
+}
+
+// Definición de los tokenes cuyas expresiones regulares contienen palabras reservadas por la gramática
+TOKEN:
+{
+    < IMPRIMIR: "imprimir" > |
+    < SI: "si" > |
+    < SINO: "sino" > |
+    < MIENTRAS: "mientras" > |
+    < HACER: "hacer" >
+}
+
+// Definición de los tokenes cuyas expresiones regulares contienen identificadores y números, axiomas de la gramática
+TOKEN:
+{
+    < ID: ["a"-"z","A"-"Z","_"] (["a"-"z","A"-"Z","0"-"9","_"])* >   |
+    < NUM: (["0"-"9"])+ >
+}
+
+// Definición de las producciones de la gramática
+
+//Producción inicial que representa una lista de sentencias
+void list_sntncs():
+{}
+{
+    (sntnc() <PUNTO_COMA>)* <EOF>   //Detecta cero o más sentencias seguidas de punto y coma hasta el end of file
+}
+
+//Producción que representa una sentencia de cualquier tipo dentro de las contempladas en la gramática
+void sntnc():
+{}
+{
+    sel_stmt() | iter_stmt() | assig_stmt() | print_stmt()  //Detecta una sentencia de selección, iteración, asignación o impresión
+}
+
+//Producción que representa una sentencia de impresión
+void print_stmt():
+{}
+{
+    <IMPRIMIR> <PAREN_IZQ> expr() <PAREN_DER>
+    {
+        System.out.println("\tprint");  //Imprime "print" al final de la sentencia
+    }
+}
+
+//Producción que representa una sentencia de selección (if-else)
+void sel_stmt():
+{
+    String lbl_Sal, lbl_else;   //Creamos dos variables para las etiquetas (lbl_Sal para la salida y lbl_else para el else)
+}
+{
+    <SI> <PAREN_IZQ> expr() <PAREN_DER> 
+    {
+        lbl_else=siguiente_etiqueta();
+        lbl_Sal=lbl_else;                               //Para el caso sin else, lbl_Sal es igual a lbl_else
+        System.out.println("\tsifalsovea " + lbl_else); //Despues de evaluar la expresión, si es falsa salta a lbl_else
+    }
+    <LLAVE_IZQ> ( sntnc() <PUNTO_COMA> )* <LLAVE_DER>   //Aquí leemos las acciones que se producen dentro del if
+    
+    (<SINO> 
+    {
+        lbl_Sal=siguiente_etiqueta();                   //Si hay else, lbl_Sal es una nueva etiqueta
+        System.out.println("\tvea " + lbl_Sal);         //Al final del if, salta a lbl_Sal para evitar ejecutar el else
+        System.out.println(lbl_else);                   //Imprime lbl_else para comenzar el bloque else                   
+    }
+    <LLAVE_IZQ> ( sntnc() <PUNTO_COMA> )* <LLAVE_DER>)? //Leemos las acciones del else, si lo hubiera (?)
+
+    {
+        System.out.println(lbl_Sal);                    //Por ultimo imprimimos la etiqueta de salida, que en el caso de que haya else será distinta a la del else
+    }
+}
+
+//Producción que representa una sentencia de iteración (while o do-while)
+void iter_stmt():
+{   
+    String lbl_Bucle,lbl_Salida;    //Creamos dos variables para las iteraciones, en el caso del do-while solo se usará lbl_Bucle
+}
+{
+    (<MIENTRAS> 
+    {
+        lbl_Bucle=siguiente_etiqueta();
+        lbl_Salida=siguiente_etiqueta();
+        System.out.println(lbl_Bucle);  //Creamos las dos etiquetas y mostramos la etiqueta del bucle antes de evaluar la expresión para poder evaluarla al inicio de cada iteración
+    }
+    <PAREN_IZQ> expr() <PAREN_DER> 
+    {
+        System.out.println("\tsifalsovea " + lbl_Salida);   //Una vez evaluada la expresión, viajaremos a la etiqueta de salida si fuera falsa
+    }
+    <LLAVE_IZQ> ( sntnc() <PUNTO_COMA> )* <LLAVE_DER>
+    {
+        System.out.println("\tvea " + lbl_Bucle);   //Una vez realizadas las acciones del bucle, volvemos a la etiqueta del bucle para reevaluar la expresión
+        System.out.println(lbl_Salida); //Imprimimos la etiqueta de salida para cuando la condición del bucle sea falsa
+    }
+    
+    )
+    | (<HACER> 
+    {
+        lbl_Bucle=siguiente_etiqueta();
+        System.out.println(lbl_Bucle);  //Creamos la etiqueta del bucle, solo habrá una porque como evaluamos la condición al final, simplemente volveremos a esta etiqueta si fuera cierto y sino, continuariamos con el programa
+    }
+    
+    <LLAVE_IZQ> ( sntnc() <PUNTO_COMA> )* <LLAVE_DER> <MIENTRAS> <PAREN_IZQ> expr() <PAREN_DER> 
+    {
+        System.out.println("\tsiciertovea " + lbl_Bucle);   //Evaluamos la expresión y si fuera cierta, volveriamos a la etiqueta del principio
+    }
+    
+    )
+}
+
+//Producción que representa una sentencia de asignación
+void assig_stmt():
+{
+    Token t;    //Creamos una variable de tipo Token para almacenar la entrada y poder imprimirla con image
+}
+{
+    t = <ID>    //Recogemos el ID con la variable t
+    {
+        System.out.println("\tvalori " + t.image);  //Imprimimos el valori de la imagen del ID
+    }
+    //Para cada tipo de asignación, imprimimos la secuencia de operaciones correspondiente
+    (<IGUAL> expr() 
+    {
+        System.out.println("\tasigna");
+    }
+    | <MAS_IGUAL> 
+    {
+        System.out.println("\tvalord " + t.image);
+    }
+    expr() 
+    {
+        System.out.println("\tsum");
+        System.out.println("\tasigna");
+    }
+    | <MENOS_IGUAL> 
+    {
+        System.out.println("\tvalord " + t.image);
+    }
+    expr() 
+    {
+        System.out.println("\tsub");
+        System.out.println("\tasigna");
+    }
+    | <MULT_IGUAL> 
+    {
+        System.out.println("\tvalord " + t.image);
+    }
+    expr() 
+    {
+        System.out.println("\tmul");
+        System.out.println("\tasigna");
+    }
+    | <DIV_IGUAL> 
+    {
+        System.out.println("\tvalord " + t.image);
+    }
+    expr()
+    {
+        System.out.println("\tdiv");
+        System.out.println("\tasigna");
+    }
+    )
+}
+
+//Producción que representa una expresión aritmética de suma o resta
+void expr():
+{}
+{
+    mult_expr() (<SUMA> mult_expr() 
+    {
+        System.out.println("\tsum");//Al encontrar una suma, imprimimos dicha operación
+    }
+    | <RESTA> mult_expr()
+    {
+        System.out.println("\tsub");//Lo mismo con la resta
+    }
+    )*
+}
+
+//Producción que representa una expresión aritmética de multiplicación o división
+void mult_expr():
+{}
+{
+    val() ( <DIV> val() 
+    {
+        System.out.println("\tdiv");//Al encontrar una división, imprimimos dicha operación
+
+    }
+    | <MULT> val()
+    {
+        System.out.println("\tmul");//Lo mismo con la multiplicación
+    }
+    )*
+}
+
+//Produccion que representa un valor, sea número, identificador o expresión entre paréntesis
+void val():
+{
+    Token t;
+}
+{
+    t = <NUM> 
+    {
+        System.out.println("\tmete " + t.image);//Imprimimos el mete con el valor del número
+    }
+    |
+    t= <ID> 
+    {
+        System.out.println("\tvalord " + t.image);//Imprimimos el valord con el valor del identificador
+    }
+    |
+    <PAREN_IZQ> expr() <PAREN_DER>
+}
