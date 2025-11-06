@@ -1,30 +1,37 @@
+// Con esta opción elegimos generar o no código de depuración para el gestor de tokens
 options {DEBUG_TOKEN_MANAGER=false;}
 
-
+// Comenzamos la definición del parser
 PARSER_BEGIN(Parser_practica)
 
+
+// Definimos la clase Parser_practica
 public class Parser_practica {
 
+    // Definimos una variable estática para llevar un registro de las etiquetas generadas
     static int label=0;
 
+    // Creamos un método para generar la siguiente etiqueta
     public static String siguiente_etiqueta(){
-        return "LBL" + label++;
+        return "LBL" + label++;     // Simplemente devuelve la cadena "LBL" seguida del numero actual para la etiqueta y luego incrementa el contador
     }
 
-
+    // Creamos el main para ejecutar el parser
     public static void main(String args[]) throws ParseException, java.io.FileNotFoundException {
         
+        // Instanciamos el parser
         Parser_practica parser;
 
+        // Verificamos si se ha pasado un argumento al ejecutar el programa
         if ( args.length < 1 ) {
-            // Opción A: Entrada estándar
+            // Si el argumento es menor que 1 significa que no se ha pasado ningín fichero, por lo que se utilizará la entrada estándar
             parser = new Parser_practica(System.in);
         } else {
-            // Opción B: Fichero
+            // Si se ha pasado un argumento, se utilizará el fichero del mismo como entrada
             parser = new Parser_practica(new java.io.FileInputStream(args[0]));
         }
 
-        // Ejecuta el parser
+        // Ejecuta el parser comenzando por el axioma, que corresponde a la producción list_sntncs
         parser.list_sntncs();
     }
 }
@@ -77,59 +84,63 @@ TOKEN:
     < NUM: (["0"-"9"])+ >
 }
 
+// Definición de las producciones de la gramática
 
+//Producción inicial que representa una lista de sentencias
 void list_sntncs():
 {}
 {
-    (sntnc() <PUNTO_COMA>)* <EOF>
+    (sntnc() <PUNTO_COMA>)* <EOF>   //Detecta cero o más sentencias seguidas de punto y coma hasta el end of file
 }
 
+//Producción que representa una sentencia de cualquier tipo dentro de las contempladas en la gramática
 void sntnc():
 {}
 {
-    sel_stmt() | iter_stmt() | assig_stmt() | print_stmt()
+    sel_stmt() | iter_stmt() | assig_stmt() | print_stmt()  //Detecta una sentencia de selección, iteración, asignación o impresión
 }
 
+//Producción que representa una sentencia de impresión
 void print_stmt():
 {}
 {
     <IMPRIMIR> <PAREN_IZQ> expr() <PAREN_DER>
     {
-        System.out.println("\tprint");
+        System.out.println("\tprint");  //Imprime "print" al final de la sentencia
     }
 }
 
-
+//Producción que representa una sentencia de selección (if-else)
 void sel_stmt():
 {
-    String lbl_Sal, lbl_else;
+    String lbl_Sal, lbl_else;   //Creamos dos variables para las etiquetas (lbl_Sal para la salida y lbl_else para el else)
 }
 {
     <SI> <PAREN_IZQ> expr() <PAREN_DER> 
     {
         lbl_else=siguiente_etiqueta();
-        lbl_Sal=lbl_else;
-        System.out.println("\tsifalsovea " + lbl_else); 
+        lbl_Sal=lbl_else;                               //Para el caso sin else, lbl_Sal es igual a lbl_else
+        System.out.println("\tsifalsovea " + lbl_else); //Despues de evaluar la expresión, si es falsa salta a lbl_else
     }
-    <LLAVE_IZQ> ( sntnc() <PUNTO_COMA> )* <LLAVE_DER> 
+    <LLAVE_IZQ> ( sntnc() <PUNTO_COMA> )* <LLAVE_DER>   //Aquí leemos las acciones que se producen dentro del if
     
     (<SINO> 
     {
-        lbl_Sal=siguiente_etiqueta();
-        System.out.println("\tvea " + lbl_Sal);
-        System.out.println(lbl_else);
+        lbl_Sal=siguiente_etiqueta();                   //Si hay else, lbl_Sal es una nueva etiqueta
+        System.out.println("\tvea " + lbl_Sal);         //Al final del if, salta a lbl_Sal para evitar ejecutar el else
+        System.out.println(lbl_else);                   //Imprime lbl_else para comenzar el bloque else                   
     }
-    <LLAVE_IZQ> ( sntnc() <PUNTO_COMA> )* <LLAVE_DER>)?
+    <LLAVE_IZQ> ( sntnc() <PUNTO_COMA> )* <LLAVE_DER>)? //Leemos las acciones del else, si lo hubiera (?)
 
     {
-        System.out.println(lbl_Sal);
+        System.out.println(lbl_Sal);                    //Por ultimo imprimimos la etiqueta de salida, que en el caso de que haya else será distinta a la del else
     }
 }
 
-
+//Producción que representa una sentencia de iteración (while o do-while)
 void iter_stmt():
 {   
-    String lbl_Bucle,lbl_Salida;
+    String lbl_Bucle,lbl_Salida;    //Creamos dos variables para las iteraciones, en el caso del do-while solo se usará lbl_Bucle
 }
 {
     (<MIENTRAS> 
@@ -262,4 +273,3 @@ void val():
     |
     <PAREN_IZQ> expr() <PAREN_DER>
 }
-
