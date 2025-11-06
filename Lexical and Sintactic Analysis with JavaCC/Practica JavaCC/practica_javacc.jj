@@ -1,33 +1,43 @@
-options={DEBUG_TOKEN_MANAGER=true;}
+options {DEBUG_TOKEN_MANAGER=false;}
 
 
 PARSER_BEGIN(Parser_practica)
 
 public class Parser_practica {
 
-    int label=0
+    static int label=0;
 
-    public String siguiente_etiqueta(){
+    public static String siguiente_etiqueta(){
         return "LBL" + label++;
     }
 
 
-    public static void main(String args[]) throws ParseException {
-        Parser_practica parser = new Parser_practica(System.in);
+    public static void main(String args[]) throws ParseException, java.io.FileNotFoundException {
+        
+        Parser_practica parser;
+
+        if ( args.length < 1 ) {
+            // Opción A: Entrada estándar
+            parser = new Parser_practica(System.in);
+        } else {
+            // Opción B: Fichero
+            parser = new Parser_practica(new java.io.FileInputStream(args[0]));
+        }
+
+        // Ejecuta el parser
         parser.list_sntncs();
+    }
 }
 
-}
 PARSER_END(Parser_practica)
 
 // Definición de los tokenes que representan espacios en blanco y comentarios, que serán ignorados por el parser
 SKIP :
 {
-    < ESPACIO: " "+ > |
-    < TABULACION: "\t"+ > |
-    < SALTO_LINEA: "\n"+ > |
+    < ESPACIO: (" ")+ > |
+    < TABULACION: ("\t")+ > |
+    < SALTO_LINEA: ("\n")+ > |
     < COMENTARIO_LINEA: "//" (~["\n"])* > |
-    // /* comen * tario */
     < COMENTARIO_MULTI: "/*" (~["*"])* "*" ( ~["/"] (~["*"])* "*" )* "/" >
 }
 
@@ -71,7 +81,7 @@ TOKEN:
 void list_sntncs():
 {}
 {
-    (sntnc() <PUNTO_COMA)* <EOF>
+    (sntnc() <PUNTO_COMA>)* <EOF>
 }
 
 void sntnc():
@@ -91,9 +101,29 @@ void print_stmt():
 
 
 void sel_stmt():
-{}
 {
-    <SI> <PAREN_IZQ> expr() <PAREN_DER> <LLAVE_IZQ> ( sntnc() <PUNTO_COMA> )* <LLAVE_DER> (<SINO> <LLAVE_IZQ> ( sntnc() <PUNTO_COMA> )* <LLAVE_DER>)?
+    String lbl_Sal, lbl_else;
+}
+{
+    <SI> <PAREN_IZQ> expr() <PAREN_DER> 
+    {
+        lbl_else=siguiente_etiqueta();
+        lbl_Sal=lbl_else;
+        System.out.println("\tsifalsovea " + lbl_else); 
+    }
+    <LLAVE_IZQ> ( sntnc() <PUNTO_COMA> )* <LLAVE_DER> 
+    
+    (<SINO> 
+    {
+        lbl_Sal=siguiente_etiqueta();
+        System.out.println("\tvea " + lbl_Sal);
+        System.out.println(lbl_else);
+    }
+    <LLAVE_IZQ> ( sntnc() <PUNTO_COMA> )* <LLAVE_DER>)?
+
+    {
+        System.out.println(lbl_Sal);
+    }
 }
 
 
@@ -145,7 +175,7 @@ void assig_stmt():
     }
     (<IGUAL> expr() 
     {
-        System.out.println("\tasigna")
+        System.out.println("\tasigna");
     }
     | <MAS_IGUAL> 
     {
@@ -153,8 +183,8 @@ void assig_stmt():
     }
     expr() 
     {
-        System.out.println("\tsum")
-        System.out.println("\tasigna")
+        System.out.println("\tsum");
+        System.out.println("\tasigna");
     }
     | <MENOS_IGUAL> 
     {
@@ -162,17 +192,17 @@ void assig_stmt():
     }
     expr() 
     {
-        System.out.println("\tsub")
-        System.out.println("\tasigna")
+        System.out.println("\tsub");
+        System.out.println("\tasigna");
     }
     | <MULT_IGUAL> 
     {
-        System.out.printl("\tvalord " + t.image);
+        System.out.println("\tvalord " + t.image);
     }
     expr() 
     {
-        System.out.println("\tmul")
-        System.out.println("\tasigna")
+        System.out.println("\tmul");
+        System.out.println("\tasigna");
     }
     | <DIV_IGUAL> 
     {
@@ -180,8 +210,8 @@ void assig_stmt():
     }
     expr()
     {
-        System.out.println("\tdiv")
-        System.out.println("\tasigna")
+        System.out.println("\tdiv");
+        System.out.println("\tasigna");
     }
     )
 }
