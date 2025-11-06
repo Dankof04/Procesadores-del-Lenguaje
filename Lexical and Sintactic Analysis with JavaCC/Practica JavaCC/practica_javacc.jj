@@ -99,19 +99,38 @@ void sel_stmt():
 
 void iter_stmt():
 {   
-    String lbl_Bucle=siguiente_etiqueta();
-    String lbl_Salida=siguiente_etiqueta();
+    String lbl_Bucle,lbl_Salida;
 }
 {
     (<MIENTRAS> 
     {
+        lbl_Bucle=siguiente_etiqueta();
+        lbl_Salida=siguiente_etiqueta();
         System.out.println(lbl_Bucle);
     }
     <PAREN_IZQ> expr() <PAREN_DER> 
     {
         System.out.println("\tsifalsovea " + lbl_Salida);
     }
-    <LLAVE_IZQ> ( sntnc() <PUNTO_COMA> )* <LLAVE_DER>) | (<HACER> <LLAVE_IZQ> ( sntnc() <PUNTO_COMA> )* <LLAVE_DER> <MIENTRAS> <PAREN_IZQ> expr() <PAREN_DER> )
+    <LLAVE_IZQ> ( sntnc() <PUNTO_COMA> )* <LLAVE_DER>
+    {
+        System.out.println("\tvea " + lbl_Bucle);
+        System.out.println(lbl_Salida);
+    }
+    
+    )
+    | (<HACER> 
+    {
+        lbl_Bucle=siguiente_etiqueta();
+        System.out.println(lbl_Bucle);
+    }
+    
+    <LLAVE_IZQ> ( sntnc() <PUNTO_COMA> )* <LLAVE_DER> <MIENTRAS> <PAREN_IZQ> expr() <PAREN_DER> 
+    {
+        System.out.println("\tsiciertovea " + lbl_Bucle);
+    }
+    
+    )
 }
 
 
