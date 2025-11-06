@@ -1,3 +1,13 @@
+/*
+ * Autor: Daniel Miguel Muiña
+ * Correo electrónico: dmm1017@alu.ubu.es
+ * Versión: 1.0
+ * Descripción: Programa en JavaCC con el que implementamos un parser para un lenguaje sencillo que incluye sentencias de asignación, selección, iteración e impresión.
+ * Asignatura: Procesadores del Lenguaje
+ * Curso: 2025/2026
+ * Profesor: Alvar Arnáiz González
+ */
+
 // Con esta opción elegimos generar o no código de depuración para el gestor de tokens
 options {DEBUG_TOKEN_MANAGER=false;}
 
@@ -147,43 +157,44 @@ void iter_stmt():
     {
         lbl_Bucle=siguiente_etiqueta();
         lbl_Salida=siguiente_etiqueta();
-        System.out.println(lbl_Bucle);
+        System.out.println(lbl_Bucle);  //Creamos las dos etiquetas y mostramos la etiqueta del bucle antes de evaluar la expresión para poder evaluarla al inicio de cada iteración
     }
     <PAREN_IZQ> expr() <PAREN_DER> 
     {
-        System.out.println("\tsifalsovea " + lbl_Salida);
+        System.out.println("\tsifalsovea " + lbl_Salida);   //Una vez evaluada la expresión, viajaremos a la etiqueta de salida si fuera falsa
     }
     <LLAVE_IZQ> ( sntnc() <PUNTO_COMA> )* <LLAVE_DER>
     {
-        System.out.println("\tvea " + lbl_Bucle);
-        System.out.println(lbl_Salida);
+        System.out.println("\tvea " + lbl_Bucle);   //Una vez realizadas las acciones del bucle, volvemos a la etiqueta del bucle para reevaluar la expresión
+        System.out.println(lbl_Salida); //Imprimimos la etiqueta de salida para cuando la condición del bucle sea falsa
     }
     
     )
     | (<HACER> 
     {
         lbl_Bucle=siguiente_etiqueta();
-        System.out.println(lbl_Bucle);
+        System.out.println(lbl_Bucle);  //Creamos la etiqueta del bucle, solo habrá una porque como evaluamos la condición al final, simplemente volveremos a esta etiqueta si fuera cierto y sino, continuariamos con el programa
     }
     
     <LLAVE_IZQ> ( sntnc() <PUNTO_COMA> )* <LLAVE_DER> <MIENTRAS> <PAREN_IZQ> expr() <PAREN_DER> 
     {
-        System.out.println("\tsiciertovea " + lbl_Bucle);
+        System.out.println("\tsiciertovea " + lbl_Bucle);   //Evaluamos la expresión y si fuera cierta, volveriamos a la etiqueta del principio
     }
     
     )
 }
 
-
+//Producción que representa una sentencia de asignación
 void assig_stmt():
 {
-    Token t;
+    Token t;    //Creamos una variable de tipo Token para almacenar la entrada y poder imprimirla con image
 }
 {
-    t = <ID> 
+    t = <ID>    //Recogemos el ID con la variable t
     {
-        System.out.println("\tvalori " + t.image);
+        System.out.println("\tvalori " + t.image);  //Imprimimos el valori de la imagen del ID
     }
+    //Para cada tipo de asignación, imprimimos la secuencia de operaciones correspondiente
     (<IGUAL> expr() 
     {
         System.out.println("\tasigna");
@@ -227,35 +238,38 @@ void assig_stmt():
     )
 }
 
+//Producción que representa una expresión aritmética de suma o resta
 void expr():
 {}
 {
     mult_expr() (<SUMA> mult_expr() 
     {
-        System.out.println("\tsum ");
+        System.out.println("\tsum");//Al encontrar una suma, imprimimos dicha operación
     }
     | <RESTA> mult_expr()
     {
-        System.out.println("\tsub ");
+        System.out.println("\tsub");//Lo mismo con la resta
     }
     )*
 }
 
+//Producción que representa una expresión aritmética de multiplicación o división
 void mult_expr():
 {}
 {
     val() ( <DIV> val() 
     {
-        System.out.println("\tdiv ");
+        System.out.println("\tdiv");//Al encontrar una división, imprimimos dicha operación
 
     }
     | <MULT> val()
     {
-        System.out.println("\tmul ");
+        System.out.println("\tmul");//Lo mismo con la multiplicación
     }
     )*
 }
 
+//Produccion que representa un valor, sea número, identificador o expresión entre paréntesis
 void val():
 {
     Token t;
@@ -263,12 +277,12 @@ void val():
 {
     t = <NUM> 
     {
-        System.out.println("\tmete " + t.image);
+        System.out.println("\tmete " + t.image);//Imprimimos el mete con el valor del número
     }
     |
     t= <ID> 
     {
-        System.out.println("\tvalord " + t.image);
+        System.out.println("\tvalord " + t.image);//Imprimimos el valord con el valor del identificador
     }
     |
     <PAREN_IZQ> expr() <PAREN_DER>
